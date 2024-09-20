@@ -4,5 +4,7 @@ import Button from "primevue/button";
 </script>
 
 <template>
-  <h1>Home</h1>
+  <div class="h-full flex flex-col justify-end">
+    <Button raised class="m-4" label="logout" @click="logout" />
+  </div>
 </template>

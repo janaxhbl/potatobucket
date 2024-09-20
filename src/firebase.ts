@@ -28,8 +28,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 onAuthStateChanged(getAuth(), async (_: User | null) => {
-  console.log(getAuth().currentUser);
   useStore().user = getAuth().currentUser;
+  console.log(useStore().user);
   if (useStore().user != null) {
     router.push("/home");
   } else {
