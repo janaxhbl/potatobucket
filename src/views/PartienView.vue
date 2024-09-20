@@ -17,6 +17,7 @@ async function getvalues() {
   let data = FirestoreDB.getAllInCollection("partien");
   data.then((value) => {
     let real_data = value[0].data();
+
     console.log(real_data);
   });
 }
