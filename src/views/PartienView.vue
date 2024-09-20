@@ -16,7 +16,7 @@ async function makedocument() {
 async function getvalues() {
   let data = FirestoreDB.getAllInCollection("partien");
   data.then((value) => {
-    let real_data = value[0]._document.data.value.mapValue.fields;
+    let real_data = value[0].data();
     console.log(real_data);
   });
 }
