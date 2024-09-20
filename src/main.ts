@@ -1,12 +1,12 @@
 import "./index.css";
-import "./firebase.ts";
-import "./database.ts";
+import "./firebase";
+import "./database";
 
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 
 import App from "./App.vue";
-import router from "./router/router.ts";
+import router from "./router/router";
 import PrimeVue from "primevue/config";
 import Aura from "@primevue/themes/aura";
 import { definePreset } from "@primevue/themes";
