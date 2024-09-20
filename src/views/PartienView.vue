@@ -5,11 +5,11 @@ import FloatLabel from "primevue/floatlabel";
 import InputText from "primevue/inputtext";
 import { ref } from "vue";
 
-let doc_id: string = "NaU2ssvrWZuoPUn9QVTn";
+let doc_id: string = "vztSjmXy8Xjt2oPa0s7Y";
 let data = ref({ test: "hello, world!" });
 
 async function makedocument() {
-  doc_id = await FirestoreDB.createDocument("partien", data);
+  doc_id = await FirestoreDB.createDocument("partien", data.value);
   console.log(doc_id);
 }
 
