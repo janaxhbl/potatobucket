@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { FirestoreDB } from "@/database";
+import type { Game } from "@/interfaces/Game";
+import router from "@/router/router";
+import { setLogLevel } from "firebase/app";
 import Button from "primevue/button";
 import FloatLabel from "primevue/floatlabel";
 import InputText from "primevue/inputtext";
-import { ref } from "vue";
+import Listbox from "primevue/listbox";
+import { computed, onMounted, ref, type Ref } from "vue";
 
 let doc_id: string = "vztSjmXy8Xjt2oPa0s7Y";
 let data = ref({ test: "hello, world!" });
+
+let games: Ref<Game[]> = ref([]);
+let selectedGame: Ref<Game> = ref({} as Game);
 
 async function createGame() {
   doc_id = await FirestoreDB.createDocument("partien", data.value);
@@ -16,9 +23,13 @@ async function createGame() {
 async function getvalues() {
   let data = FirestoreDB.getAllInCollection("partien");
   data.then((value) => {
-    let real_data = value[0].data();
+    //console.log(value[0].data());
+    games.value = [];
 
-    console.log(real_data);
+    for (let i = 0; i < value.length; i++) {
+      games.value.push(value[i].data() as Game);
+    }
+    //console.log(games.value);
   });
 }
 
@@ -26,20 +37,49 @@ async function upddoc() {
   console.log(data.value);
   FirestoreDB.updateDocument("partien", doc_id, data.value);
 }
+
+function selectionChange() {
+  const idx = computed(() => {
+    return games.value.findIndex((obj: Game) => obj === selectedGame.value);
+  });
+  router.push("/game/" + idx.value);
+}
+
+onMounted(() => {
+  getvalues();
+});
 </script>
 
 <template>
-  <div class="flex flex-row justify-end">
-    <Button raised label="neue Partie erstellen" @click="createGame"></Button>
-  </div>
+  <div id="main">
+    <div
+      class="flex flex-row justify-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
+    >
+      <Button
+        raised
+        disabled
+        label="neue Partie erstellen"
+        icon="pi pi-plus"
+        :click="createGame"
+      ></Button>
+    </div>
 
-  <Button raised label="getvalues" @click="getvalues"></Button>
-  <Button raised label="pudatevalue" @click="upddoc"></Button>
-  <br /><br />
-  <FloatLabel>
-    <InputText id="data" v-model="data.test" />
-    <label for="data">data</label>
-  </FloatLabel>
-  <br /><br />
-  {{ data }}
+    <Listbox
+      v-model="selectedGame"
+      :options="games"
+      option-label="title"
+      @change="selectionChange"
+    />
+
+    <!--
+    <Button raised label="pudatevalue" @click="upddoc"></Button>
+    <br /><br />
+    <FloatLabel>
+      <InputText id="data" v-model="data.test" />
+      <label for="data">data</label>
+    </FloatLabel>
+    <br /><br />
+    {{ data }}
+    -->
+  </div>
 </template>

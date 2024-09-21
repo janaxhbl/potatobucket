@@ -5,7 +5,6 @@ import {
   GoogleAuthProvider,
   onAuthStateChanged,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
   type User
 } from "firebase/auth";
@@ -29,7 +28,7 @@ const app = initializeApp(firebaseConfig);
 
 onAuthStateChanged(getAuth(), async (_: User | null) => {
   useStore().user = getAuth().currentUser;
-  console.log(useStore().user);
+  //console.log(useStore().user);
   if (useStore().user != null) {
     router.push("/home");
   } else {

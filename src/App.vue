@@ -33,7 +33,7 @@ const breakpoint = ref("200px");
 </script>
 
 <template>
-  <div class="w-screen h-screen bg-[#EBE0BD] flex flex-col">
+  <div id="main" class="w-screen h-screen bg-[#EBE0BD] flex flex-col">
     <div class="h-full p-4">
       <RouterView />
     </div>

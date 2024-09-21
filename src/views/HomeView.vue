@@ -4,5 +4,7 @@ import Button from "primevue/button";
 </script>
 
 <template>
-  <h1>Home</h1>
+  <div id="main">
+    <h1>Home</h1>
+  </div>
 </template>
