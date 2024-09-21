@@ -8,7 +8,7 @@ import { ref } from "vue";
 let doc_id: string = "vztSjmXy8Xjt2oPa0s7Y";
 let data = ref({ test: "hello, world!" });
 
-async function makedocument() {
+async function createGame() {
   doc_id = await FirestoreDB.createDocument("partien", data.value);
   console.log(doc_id);
 }
@@ -29,8 +29,10 @@ async function upddoc() {
 </script>
 
 <template>
-  <h1>Partien</h1>
-  <Button raised label="makedoc" @click="makedocument"></Button>
+  <div class="flex flex-row justify-end">
+    <Button raised label="neue Partie erstellen" @click="createGame"></Button>
+  </div>
+
   <Button raised label="getvalues" @click="getvalues"></Button>
   <Button raised label="pudatevalue" @click="upddoc"></Button>
   <br /><br />

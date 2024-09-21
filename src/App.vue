@@ -11,7 +11,7 @@ const items = ref([
     label: "Partien",
     icon: "pi pi-list",
     command: () => {
-      router.push("/partien");
+      router.push("/games");
     },
   },
   {
@@ -34,7 +34,7 @@ const breakpoint = ref("200px");
 
 <template>
   <div class="w-screen h-screen bg-[#EBE0BD] flex flex-col">
-    <div class="h-full">
+    <div class="h-full p-4">
       <RouterView />
     </div>
     <Menubar
