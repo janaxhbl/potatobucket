@@ -2,14 +2,14 @@
 import { FirestoreDB } from "@/database";
 import type { Game } from "@/interfaces/Game";
 import router from "@/router/router";
-import { setLogLevel } from "firebase/app";
+import { useStore } from "@/stores/counter";
 import Button from "primevue/button";
 import FloatLabel from "primevue/floatlabel";
 import InputText from "primevue/inputtext";
 import Listbox from "primevue/listbox";
 import { computed, onMounted, ref, type Ref } from "vue";
 
-let doc_id: string = "vztSjmXy8Xjt2oPa0s7Y";
+let doc_id: string = "ttkRmtrt2Z5Lfw1rQYIF";
 let data = ref({ test: "hello, world!" });
 
 let games: Ref<Game[]> = ref([]);
@@ -18,18 +18,17 @@ let selectedGame: Ref<Game> = ref({} as Game);
 async function createGame() {
   doc_id = await FirestoreDB.createDocument("partien", data.value);
   console.log(doc_id);
+  useStore().games_ids.push(doc_id);
 }
 
 async function getvalues() {
   let data = FirestoreDB.getAllInCollection("partien");
   data.then((value) => {
-    //console.log(value[0].data());
     games.value = [];
 
     for (let i = 0; i < value.length; i++) {
       games.value.push(value[i].data() as Game);
     }
-    //console.log(games.value);
   });
 }
 
@@ -70,8 +69,7 @@ onMounted(() => {
       option-label="title"
       @change="selectionChange"
     />
-
-    <!--
+    <!-- 
     <Button raised label="pudatevalue" @click="upddoc"></Button>
     <br /><br />
     <FloatLabel>
@@ -79,7 +77,6 @@ onMounted(() => {
       <label for="data">data</label>
     </FloatLabel>
     <br /><br />
-    {{ data }}
-    -->
+    {{ data }} -->
   </div>
 </template>

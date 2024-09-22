@@ -1,4 +1,4 @@
 export interface Round {
   num: number;
-  points: [number];
+  points: number[];
 }

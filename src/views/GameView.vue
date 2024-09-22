@@ -2,65 +2,123 @@
 import { FirestoreDB } from "@/database";
 import type { Game } from "@/interfaces/Game";
 import type { Round } from "@/interfaces/Round";
+import { useStore } from "@/stores/counter";
 import Button from "primevue/button";
 import Column from "primevue/column";
 import DataTable from "primevue/datatable";
+import InputGroup from "primevue/inputgroup";
+import InputNumber from "primevue/inputnumber";
 import { onMounted, ref, type Ref } from "vue";
 import { useRoute } from "vue-router";
 
+let gameId: number = -1;
+
 let game: Ref<Game> = ref({} as Game);
-let title: Ref<String> = ref("");
-let players_raw: Ref<String[]> = ref([]);
+let title: Ref<string> = ref("");
+let players_raw: Ref<string[]> = ref([]);
 let rounds_raw: Ref<Round[]> = ref([]);
 
-let players: any[] = [];
+let players: Ref<any[]> = ref([]);
 let rounds: Ref<any[]> = ref([]);
 
-function getCurrentGame() {
-  const game_id = Number(useRoute().params.id);
+let addRoundValues: Ref<number[]> = ref([]);
 
+function getCurrentGame() {
   let data = FirestoreDB.getAllInCollection("partien");
   data.then((value) => {
-    game.value = value[game_id].data() as Game;
+    game.value = value[gameId].data() as Game;
 
-    //console.log(game.value);
     title.value = game.value.title;
     players_raw.value = game.value.players;
     rounds_raw.value = game.value.rounds;
 
-    // format for datapanel
     for (let i = 0; i < players_raw.value.length; i++) {
-      players.push({
+      addRoundValues.value.push(null as unknown as number);
+    }
+
+    // format for datapanel
+    players.value = [];
+    rounds.value = [];
+    for (let i = 0; i < players_raw.value.length; i++) {
+      players.value.push({
         field: players_raw.value[i],
         header: players_raw.value[i],
       });
     }
-    console.log(players);
 
     // Loop through each key in the rounds object
     for (const roundKey in rounds_raw.value) {
       if (Object.prototype.hasOwnProperty.call(rounds_raw.value, roundKey)) {
-        const values: any = rounds_raw.value[roundKey]; // Get the values (e.g., [7, 7] for round 1)
-
-        const result: any = {}; // Create an empty object to store the field-value pairs
+        const values: any = rounds_raw.value[roundKey];
+        const result: any = {};
 
         // Loop through the players array and match the field with the values from the round
-        for (let i = 0; i < players.length; i++) {
-          const playerField = players[i].field; // Get the field (e.g., 'x' or 'y')
-          result[playerField] = values[i]; // Assign the corresponding value from the round
+        for (let i = 0; i < players.value.length; i++) {
+          const playerField = players.value[i].field;
+          result[playerField] = values[i];
         }
 
-        rounds.value.push(result); // Add the result object to the transformed data array
+        rounds.value.push(result);
       }
     }
-
-    console.log(rounds.value);
   });
 }
 
+async function addRound(btnId: string) {
+  let currDocID = useStore().games_ids[gameId];
+
+  let everyThingIsNull: boolean = true;
+  for (let i = 0; i < addRoundValues.value.length; i++) {
+    if (addRoundValues.value[i] == null) {
+      addRoundValues.value[i] = 0;
+    } else {
+      everyThingIsNull = false;
+    }
+  }
+
+  if (everyThingIsNull) {
+    addRoundValues.value = [];
+    return;
+  }
+
+  let newRoundNum: number = Object.keys(rounds_raw.value).length;
+  newRoundNum++;
+
+  let roundKeys = Object.keys(rounds_raw.value);
+  let lastRoundKey = Number(roundKeys[roundKeys.length - 1]);
+  let pointsOfLastRound: number[] = Object.values(
+    rounds_raw.value[lastRoundKey]
+  );
+
+  let cumulativeRoundValues: number[] = [];
+
+  if (btnId == "plus") {
+    for (let i = 0; i < pointsOfLastRound.length; i++) {
+      cumulativeRoundValues.push(
+        pointsOfLastRound[i] + addRoundValues.value[i]
+      );
+    }
+  } else if (btnId == "minus") {
+    for (let i = 0; i < pointsOfLastRound.length; i++) {
+      cumulativeRoundValues.push(
+        pointsOfLastRound[i] - addRoundValues.value[i]
+      );
+    }
+  }
+
+  let newRound = { [newRoundNum]: cumulativeRoundValues };
+  Object.assign(game.value.rounds, newRound);
+
+  FirestoreDB.updateDocument("partien", currDocID, game.value);
+
+  addRoundValues.value = [];
+
+  await getCurrentGame();
+}
+
 onMounted(() => {
+  gameId = Number(useRoute().params.id);
   getCurrentGame();
-  null;
 });
 </script>
 
@@ -72,7 +130,8 @@ onMounted(() => {
       v-if="rounds && rounds.length > 0"
       :value="rounds"
       :striped-rows="true"
-      class="rounded-lg overflow-hidden"
+      :show-gridlines="false"
+      class="rounded-lg overflow-hidden mb-2"
     >
       <Column
         v-for="p of players"
@@ -81,5 +140,31 @@ onMounted(() => {
         :header="p.header"
       ></Column>
     </DataTable>
+
+    <InputGroup class="mb-4">
+      <InputNumber
+        v-for="i in players_raw.length"
+        :key="i - 1"
+        v-model="addRoundValues[i - 1]"
+      />
+    </InputGroup>
+
+    <div class="flex gap-2">
+      <Button
+        label="Speichern +"
+        icon="pi pi-save"
+        icon-pos="left"
+        class="w-full"
+        @click="addRound('plus')"
+      />
+
+      <Button
+        label="Speichern -"
+        icon="pi pi-save"
+        icon-pos="left"
+        class="w-full"
+        @click="addRound('minus')"
+      />
+    </div>
   </div>
 </template>
