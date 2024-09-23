@@ -2,23 +2,45 @@
 import { FirestoreDB } from "@/database";
 import type { Game } from "@/interfaces/Game";
 import router from "@/router/router";
-import { useStore } from "@/stores/counter";
 import Button from "primevue/button";
-import FloatLabel from "primevue/floatlabel";
+import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Listbox from "primevue/listbox";
 import { computed, onMounted, ref, type Ref } from "vue";
 
-let doc_id: string = "ttkRmtrt2Z5Lfw1rQYIF";
-let data = ref({ test: "hello, world!" });
-
 let games: Ref<Game[]> = ref([]);
 let selectedGame: Ref<Game> = ref({} as Game);
 
+let showCreateGamePopup: Ref<boolean> = ref(false);
+let title: Ref<string> = ref("");
+let players: Ref<string[]> = ref([]);
+
 async function createGame() {
-  doc_id = await FirestoreDB.createDocument("partien", data.value);
+  let doc_id: string = "";
+  let createGameData: Game = {
+    title: "",
+    players: [],
+    rounds: [],
+  };
+
+  createGameData.title = title.value;
+  createGameData.players = players.value;
+
+  console.log(createGameData);
+
+  doc_id = await FirestoreDB.createDocument("partien", createGameData);
   console.log(doc_id);
-  useStore().games_ids.push(doc_id);
+  // add doc_id to documents collection
+  let documents = FirestoreDB.getAllInCollection("documents");
+  documents.then(async (data) => {
+    // console.log(data[0].data().ids);
+    let ids: string[] = data[0].data().ids as string[];
+    ids.push(doc_id);
+    FirestoreDB.updateDocument("documents", "document_ids", { ids });
+
+    showCreateGamePopup.value = false;
+    getvalues();
+  });
 }
 
 async function getvalues() {
@@ -51,10 +73,9 @@ onMounted(() => {
     >
       <Button
         raised
-        disabled
         label="neue Partie erstellen"
         icon="pi pi-plus"
-        :click="createGame"
+        @click="showCreateGamePopup = true"
       ></Button>
     </div>
 
@@ -64,5 +85,51 @@ onMounted(() => {
       option-label="title"
       @change="selectionChange"
     />
+
+    <Dialog
+      v-model:visible="showCreateGamePopup"
+      modal
+      header="Partie erstellen"
+      :style="{ width: '80vw' }"
+    >
+      <div class="flex items-center gap-4 mb-4">
+        <label for="title" class="font-semibold">Titel</label>
+        <InputText
+          id="title"
+          v-model="title"
+          fluid
+          class="flex-auto"
+          autocomplete="off"
+        />
+      </div>
+      <div
+        v-for="i in players.length + 1"
+        :key="i - 1"
+        class="flex items-center gap-4 mb-8"
+      >
+        <label
+          :for="(players.length + 1).toString()"
+          class="font-semibold w-1/2"
+        >
+          Spieler {{ i }}
+        </label>
+        <InputText
+          :id="(players.length + 1).toString()"
+          v-model="players[i - 1]"
+          fluid
+          class="flex-auto"
+          autocomplete="off"
+        />
+      </div>
+      <div class="flex justify-between gap-2">
+        <Button
+          type="button"
+          label="Abbrechen"
+          severity="secondary"
+          @click="showCreateGamePopup = false"
+        ></Button>
+        <Button type="button" label="Erstellen" @click="createGame"></Button>
+      </div>
+    </Dialog>
   </div>
 </template>

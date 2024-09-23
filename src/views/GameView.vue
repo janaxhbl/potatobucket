@@ -18,8 +18,8 @@ let title: Ref<string> = ref("");
 let players_raw: Ref<string[]> = ref([]);
 let rounds_raw: Ref<Round[]> = ref([]);
 
-let players: Ref<any[]> = ref([]);
-let rounds: Ref<any[]> = ref([]);
+let players: Ref<{ field: string; header: string }[]> = ref([]);
+let rounds: Ref<any[]> = ref([]); // bsp: [{papa: 7, jana: 7}, {papa: 6, jana: 7}]
 
 let addRoundValues: Ref<number[]> = ref([]);
 
@@ -32,13 +32,13 @@ function getCurrentGame() {
     players_raw.value = game.value.players;
     rounds_raw.value = game.value.rounds;
 
+    // add as many nulls as there are players in the addRoundValues array
     for (let i = 0; i < players_raw.value.length; i++) {
       addRoundValues.value.push(null as unknown as number);
     }
 
     // format for datapanel
     players.value = [];
-    rounds.value = [];
     for (let i = 0; i < players_raw.value.length; i++) {
       players.value.push({
         field: players_raw.value[i],
@@ -46,79 +46,75 @@ function getCurrentGame() {
       });
     }
 
-    // Loop through each key in the rounds object
-    for (const roundKey in rounds_raw.value) {
-      if (Object.prototype.hasOwnProperty.call(rounds_raw.value, roundKey)) {
-        const values: any = rounds_raw.value[roundKey];
-        const result: any = {};
-
-        // Loop through the players array and match the field with the values from the round
-        for (let i = 0; i < players.value.length; i++) {
-          const playerField = players.value[i].field;
-          result[playerField] = values[i];
-        }
-
-        rounds.value.push(result);
+    rounds.value = [];
+    for (let i = 0; i < rounds_raw.value.length; i++) {
+      let roundRaw = rounds_raw.value[i];
+      let round: { [key: string]: number } = {};
+      for (let j = 0; j < players_raw.value.length; j++) {
+        round[players_raw.value[j]] = roundRaw.points[j];
       }
+      rounds.value.push(round);
     }
   });
 }
 
 async function addRound(btnId: string) {
-  let currDocID = useStore().games_ids[gameId];
+  let documents = FirestoreDB.getAllInCollection("documents");
+  documents.then(async (data) => {
+    let ids: string[] = data[0].data().ids as string[];
+    let currDocID = ids[gameId];
 
-  let everyThingIsNull: boolean = true;
-  for (let i = 0; i < addRoundValues.value.length; i++) {
-    if (addRoundValues.value[i] == null) {
-      addRoundValues.value[i] = 0;
-    } else {
-      everyThingIsNull = false;
-    }
-  }
-
-  if (everyThingIsNull) {
-    addRoundValues.value = [];
-    return;
-  }
-
-  let newRoundNum: number = Object.keys(rounds_raw.value).length;
-  newRoundNum++;
-  let cumulativeRoundValues: number[] = [];
-
-  if (btnId == "absolut") {
+    let everyThingIsNull: boolean = true;
     for (let i = 0; i < addRoundValues.value.length; i++) {
-      cumulativeRoundValues.push(addRoundValues.value[i]);
-    }
-  } else {
-    let roundKeys = Object.keys(rounds_raw.value);
-    let lastRoundKey = Number(roundKeys[roundKeys.length - 1]);
-    let pointsOfLastRound: number[] = Object.values(
-      rounds_raw.value[lastRoundKey]
-    );
-
-    if (btnId == "plus") {
-      for (let i = 0; i < pointsOfLastRound.length; i++) {
-        cumulativeRoundValues.push(
-          pointsOfLastRound[i] + addRoundValues.value[i]
-        );
-      }
-    } else if (btnId == "minus") {
-      for (let i = 0; i < pointsOfLastRound.length; i++) {
-        cumulativeRoundValues.push(
-          pointsOfLastRound[i] - addRoundValues.value[i]
-        );
+      if (addRoundValues.value[i] == null) {
+        addRoundValues.value[i] = 0;
+      } else {
+        everyThingIsNull = false;
       }
     }
-  }
 
-  let newRound = { [newRoundNum]: cumulativeRoundValues };
-  Object.assign(game.value.rounds, newRound);
+    if (everyThingIsNull) {
+      addRoundValues.value = [];
+      return;
+    }
 
-  FirestoreDB.updateDocument("partien", currDocID, game.value);
+    let newRoundNum: number = rounds_raw.value.length;
+    newRoundNum++;
+    let cumulativeRoundValues: number[] = [];
 
-  addRoundValues.value = [];
+    if (btnId == "absolut") {
+      for (let i = 0; i < addRoundValues.value.length; i++) {
+        cumulativeRoundValues.push(addRoundValues.value[i]);
+      }
+    } else {
+      let pointsOfLastRound: number[] =
+        rounds_raw.value[rounds_raw.value.length - 1].points;
 
-  await getCurrentGame();
+      if (btnId == "plus") {
+        for (let i = 0; i < pointsOfLastRound.length; i++) {
+          cumulativeRoundValues.push(
+            pointsOfLastRound[i] + addRoundValues.value[i]
+          );
+        }
+      } else if (btnId == "minus") {
+        for (let i = 0; i < pointsOfLastRound.length; i++) {
+          cumulativeRoundValues.push(
+            pointsOfLastRound[i] - addRoundValues.value[i]
+          );
+        }
+      }
+    }
+
+    let newRound: Round = { num: newRoundNum, points: cumulativeRoundValues };
+    game.value.rounds.push(newRound);
+    console.log(game.value);
+
+    FirestoreDB.updateDocument("partien", currDocID, game.value);
+
+    addRoundValues.value = [];
+
+    getCurrentGame();
+  });
 }
 
 onMounted(() => {
