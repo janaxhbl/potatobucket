@@ -32,11 +32,6 @@ async function getvalues() {
   });
 }
 
-async function upddoc() {
-  console.log(data.value);
-  FirestoreDB.updateDocument("partien", doc_id, data.value);
-}
-
 function selectionChange() {
   const idx = computed(() => {
     return games.value.findIndex((obj: Game) => obj === selectedGame.value);
@@ -69,14 +64,5 @@ onMounted(() => {
       option-label="title"
       @change="selectionChange"
     />
-    <!-- 
-    <Button raised label="pudatevalue" @click="upddoc"></Button>
-    <br /><br />
-    <FloatLabel>
-      <InputText id="data" v-model="data.test" />
-      <label for="data">data</label>
-    </FloatLabel>
-    <br /><br />
-    {{ data }} -->
   </div>
 </template>
