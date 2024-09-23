@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Menubar from "primevue/menubar";
-import { onMounted, ref } from "vue";
-import { RouterLink, RouterView, useRouter } from "vue-router";
+import { ref } from "vue";
+import { RouterView, useRouter } from "vue-router";
 import { useStore } from "./stores/counter";
 
 const router = useRouter();
@@ -30,15 +30,6 @@ const items = ref([
   },
 ]);
 const breakpoint = ref("200px");
-
-onMounted(() => {
-  let routerview = document.getElementById("routerview");
-  let menubar = document.getElementById("menubar");
-
-  if (routerview && menubar) {
-    routerview.style.maxHeight = "calc(100vh - " + menubar.offsetHeight + "px)";
-  }
-});
 </script>
 
 <template>
