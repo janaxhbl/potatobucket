@@ -30,15 +30,25 @@ const items = ref([
   },
 ]);
 const breakpoint = ref("200px");
+
+onMounted(() => {
+  let routerview = document.getElementById("routerview");
+  let menubar = document.getElementById("menubar");
+
+  if (routerview && menubar) {
+    routerview.style.maxHeight = "calc(100vh - " + menubar.offsetHeight + "px)";
+  }
+});
 </script>
 
 <template>
   <div id="main" class="w-screen h-screen bg-[#EBE0BD] flex flex-col">
-    <div class="h-full p-4 overflow-auto">
+    <div id="routerview" class="h-full p-4 overflow-auto">
       <RouterView />
     </div>
     <Menubar
       v-if="useStore().user != null"
+      id="menubar"
       :model="items"
       :breakpoint="breakpoint"
       :pt="{
