@@ -83,26 +83,31 @@ async function addRound(btnId: string) {
 
   let newRoundNum: number = Object.keys(rounds_raw.value).length;
   newRoundNum++;
-
-  let roundKeys = Object.keys(rounds_raw.value);
-  let lastRoundKey = Number(roundKeys[roundKeys.length - 1]);
-  let pointsOfLastRound: number[] = Object.values(
-    rounds_raw.value[lastRoundKey]
-  );
-
   let cumulativeRoundValues: number[] = [];
 
-  if (btnId == "plus") {
-    for (let i = 0; i < pointsOfLastRound.length; i++) {
-      cumulativeRoundValues.push(
-        pointsOfLastRound[i] + addRoundValues.value[i]
-      );
+  if (btnId == "absolut") {
+    for (let i = 0; i < addRoundValues.value.length; i++) {
+      cumulativeRoundValues.push(addRoundValues.value[i]);
     }
-  } else if (btnId == "minus") {
-    for (let i = 0; i < pointsOfLastRound.length; i++) {
-      cumulativeRoundValues.push(
-        pointsOfLastRound[i] - addRoundValues.value[i]
-      );
+  } else {
+    let roundKeys = Object.keys(rounds_raw.value);
+    let lastRoundKey = Number(roundKeys[roundKeys.length - 1]);
+    let pointsOfLastRound: number[] = Object.values(
+      rounds_raw.value[lastRoundKey]
+    );
+
+    if (btnId == "plus") {
+      for (let i = 0; i < pointsOfLastRound.length; i++) {
+        cumulativeRoundValues.push(
+          pointsOfLastRound[i] + addRoundValues.value[i]
+        );
+      }
+    } else if (btnId == "minus") {
+      for (let i = 0; i < pointsOfLastRound.length; i++) {
+        cumulativeRoundValues.push(
+          pointsOfLastRound[i] - addRoundValues.value[i]
+        );
+      }
     }
   }
 
@@ -123,47 +128,64 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="main">
-    <h1 class="text-xl border-b-[1px] border-[#bb9d3a] mb-4">{{ title }}</h1>
+  <div id="main" class="h-full flex flex-col justify-between gap-4">
+    <div class="flex flex-col overflow-hidden gap-4">
+      <div id="header">
+        <h1 class="text-xl border-b-[1px] border-[#bb9d3a]">{{ title }}</h1>
+      </div>
 
-    <DataTable
-      v-if="rounds && rounds.length > 0"
-      :value="rounds"
-      :striped-rows="true"
-      :show-gridlines="false"
-      class="rounded-lg overflow-hidden mb-2"
-    >
-      <Column
-        v-for="p of players"
-        :key="p.field"
-        :field="p.field"
-        :header="p.header"
-      ></Column>
-    </DataTable>
+      <div id="data" class="overflow-y-auto">
+        <DataTable
+          v-if="rounds && rounds.length > 0"
+          :value="rounds"
+          :striped-rows="true"
+          :show-gridlines="false"
+          class="rounded-lg overflow-hidden"
+        >
+          <Column
+            v-for="p of players"
+            :key="p.field"
+            :field="p.field"
+            :header="p.header"
+          ></Column>
+        </DataTable>
+      </div>
+    </div>
 
-    <InputGroup class="mb-4">
-      <InputNumber
-        v-for="i in players_raw.length"
-        :key="i - 1"
-        v-model="addRoundValues[i - 1]"
-      />
-    </InputGroup>
+    <div id="buttons">
+      <InputGroup class="mb-2">
+        <InputNumber
+          v-for="i in players_raw.length"
+          :key="i - 1"
+          v-model="addRoundValues[i - 1]"
+          :placeholder="players_raw[i - 1]"
+        />
+      </InputGroup>
 
-    <div class="flex gap-2">
+      <div class="flex gap-2 mb-2">
+        <Button
+          label="Speichern +"
+          icon="pi pi-save"
+          icon-pos="left"
+          class="w-full"
+          @click="addRound('plus')"
+        />
+
+        <Button
+          label="Speichern -"
+          icon="pi pi-save"
+          icon-pos="left"
+          class="w-full"
+          @click="addRound('minus')"
+        />
+      </div>
+
       <Button
-        label="Speichern +"
+        label="Speichern (absolute Werte)"
         icon="pi pi-save"
         icon-pos="left"
         class="w-full"
-        @click="addRound('plus')"
-      />
-
-      <Button
-        label="Speichern -"
-        icon="pi pi-save"
-        icon-pos="left"
-        class="w-full"
-        @click="addRound('minus')"
+        @click="addRound('absolut')"
       />
     </div>
   </div>

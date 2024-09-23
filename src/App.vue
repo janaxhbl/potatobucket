@@ -34,7 +34,7 @@ const breakpoint = ref("200px");
 
 <template>
   <div id="main" class="w-screen h-screen bg-[#EBE0BD] flex flex-col">
-    <div class="h-full p-4">
+    <div class="h-full p-4 overflow-auto">
       <RouterView />
     </div>
     <Menubar
