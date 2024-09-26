@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Menubar from "primevue/menubar";
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import { RouterView, useRouter } from "vue-router";
 import { useStore } from "./stores/counter";
 
@@ -30,13 +30,6 @@ const items = ref([
   },
 ]);
 const breakpoint = ref("200px");
-
-onMounted(() => {
-  let body = document.querySelector("body");
-  if (body) {
-    body.scrollTop = body.scrollHeight;
-  }
-});
 </script>
 
 <template>
