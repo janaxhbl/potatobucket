@@ -55,6 +55,7 @@ onUnmounted(() => {
     <div id="routerview" class="h-full p-4 overflow-auto">
       <RouterView />
     </div>
+    {{ viewportHeight }}
     <Menubar
       v-if="useStore().user != null"
       id="menubar"
