@@ -38,6 +38,9 @@ async function createGame() {
     ids.push(doc_id);
     FirestoreDB.updateDocument("documents", "document_ids", { ids });
 
+    title.value = "";
+    players.value = [];
+
     showCreateGamePopup.value = false;
     getvalues();
   });
@@ -67,7 +70,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="main">
+  <div id="main" class="h-full flex flex-col overflow-hidden">
     <div
       class="flex flex-row justify-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
     >
@@ -83,6 +86,9 @@ onMounted(() => {
       v-model="selectedGame"
       :options="games"
       option-label="title"
+      :scroll-height="100"
+      class="overflow-y-auto max-h-full"
+      :striped="true"
       @change="selectionChange"
     />
 

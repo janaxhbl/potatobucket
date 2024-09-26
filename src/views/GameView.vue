@@ -2,7 +2,6 @@
 import { FirestoreDB } from "@/database";
 import type { Game } from "@/interfaces/Game";
 import type { Round } from "@/interfaces/Round";
-import { useStore } from "@/stores/counter";
 import Button from "primevue/button";
 import Column from "primevue/column";
 import DataTable from "primevue/datatable";

@@ -38,6 +38,11 @@ const router = createRouter({
       name: "game",
       component: GameView,
       props: true
+    },
+    {
+      path: "/:notFound",
+      name: "notFound",
+      component: HomeView
     }
   ]
 });
