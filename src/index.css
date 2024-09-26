@@ -10,3 +10,9 @@
   font-family: "Barlow Condensed", "sans-serif";
   font-size: 20px;
 }
+
+@supports (-webkit-touch-callout: none) {
+  .h-screen {
+    height: -webkit-fill-available;
+  }
+}
