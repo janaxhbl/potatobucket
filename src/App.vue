@@ -31,31 +31,13 @@ const items = ref([
 ]);
 
 const breakpoint = ref("200px");
-const viewportHeight = ref(window.innerHeight);
-
-function updateViewportHeight() {
-  viewportHeight.value = window.innerHeight;
-}
-
-onMounted(() => {
-  window.addEventListener("resize", updateViewportHeight);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("resize", updateViewportHeight);
-});
 </script>
 
 <template>
-  <div
-    id="main"
-    class="w-screen bg-[#EBE0BD] flex flex-col"
-    :style="{ height: viewportHeight + 'px' }"
-  >
+  <div id="main" class="w-screen h-screen bg-[#EBE0BD] flex flex-col">
     <div id="routerview" class="h-full p-4 overflow-auto">
       <RouterView />
     </div>
-    {{ viewportHeight }}
     <Menubar
       v-if="useStore().user != null"
       id="menubar"
