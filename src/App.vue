@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Menubar from "primevue/menubar";
-import { ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { RouterView, useRouter } from "vue-router";
 import { useStore } from "./stores/counter";
 
@@ -29,11 +29,29 @@ const items = ref([
     },
   },
 ]);
+
 const breakpoint = ref("200px");
+const viewportHeight = ref(window.innerHeight);
+
+function updateViewportHeight() {
+  viewportHeight.value = window.innerHeight;
+}
+
+onMounted(() => {
+  window.addEventListener("resize", updateViewportHeight);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", updateViewportHeight);
+});
 </script>
 
 <template>
-  <div id="main" class="w-screen h-screen bg-[#EBE0BD] flex flex-col">
+  <div
+    id="main"
+    class="w-screen bg-[#EBE0BD] flex flex-col"
+    :style="{ height: viewportHeight + 'px' }"
+  >
     <div id="routerview" class="h-full p-4 overflow-auto">
       <RouterView />
     </div>

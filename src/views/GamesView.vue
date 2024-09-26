@@ -87,7 +87,7 @@ onMounted(() => {
       :options="games"
       option-label="title"
       :scroll-height="100"
-      class="overflow-y-auto max-h-full"
+      class="overflow-y-auto"
       :striped="true"
       @change="selectionChange"
     />
