@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Menubar from "primevue/menubar";
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 import { RouterView, useRouter } from "vue-router";
 import { useStore } from "./stores/counter";
 
