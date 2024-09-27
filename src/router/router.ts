@@ -40,7 +40,7 @@ const router = createRouter({
       props: true
     },
     {
-      path: "/:notFound",
+      path: "/:pathMatch(.*)*",
       name: "notFound",
       component: HomeView
     }
