@@ -34,5 +34,5 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_POTATOBUCKET_BE931 }}
         run: |
           echo $FIREBASE_SERVICE_ACCOUNT_KEY > ${GITHUB_WORKSPACE}/firebase-key.json  # Write service account JSON to file
-          firebase use --token $FIREBASE_SERVICE_ACCOUNT_KEY potatobucket-be931  # Set Firebase project
+          firebase use --token $FIREBASE_SERVICE_ACCOUNT_KEY POTATOBUCKET_BE931  # Set Firebase project
           firebase deploy --only hosting --token $FIREBASE_SERVICE_ACCOUNT_KEY --debug  # Debug flag to provide more logs
