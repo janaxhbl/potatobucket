@@ -40,7 +40,7 @@ const router = createRouter({
       props: true
     },
     {
-      path: "/:pathMatch(.*)*",
+      path: "/:catchAll(.*)",
       name: "notFound",
       component: () => import("@/views/404.vue")
     }
