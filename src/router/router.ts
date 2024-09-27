@@ -42,7 +42,7 @@ const router = createRouter({
     {
       path: "/:pathMatch(.*)*",
       name: "notFound",
-      component: HomeView
+      component: () => import("@/views/404.vue")
     }
   ]
 });
