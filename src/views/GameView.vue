@@ -25,7 +25,12 @@ let addRoundValues: Ref<number[]> = ref([]);
 function getCurrentGame() {
   let data = FirestoreDB.getAllInCollection("partien");
   data.then((value) => {
-    game.value = value[gameId].data() as Game;
+    let games: Game[] = [];
+    for (let i = 0; i < value.length; i++) {
+      games.push(value[i].data() as Game);
+    }
+    games.sort((a, b) => a.id - b.id);
+    game.value = games[gameId];
 
     title.value = game.value.title;
     players_raw.value = game.value.players;

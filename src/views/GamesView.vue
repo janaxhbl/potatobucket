@@ -42,11 +42,11 @@ async function createGame() {
     players.value = [];
 
     showCreateGamePopup.value = false;
-    getvalues();
+    getGames();
   });
 }
 
-async function getvalues() {
+async function getGames() {
   let data = FirestoreDB.getAllInCollection("partien");
   data.then((value) => {
     games.value = [];
@@ -54,18 +54,17 @@ async function getvalues() {
     for (let i = 0; i < value.length; i++) {
       games.value.push(value[i].data() as Game);
     }
+
+    games.value.sort((a, b) => a.id - b.id);
   });
 }
 
 function selectionChange() {
-  const idx = computed(() => {
-    return games.value.findIndex((obj: Game) => obj === selectedGame.value);
-  });
-  router.push("/game/" + idx.value);
+  router.push("/game/" + selectedGame.value.id);
 }
 
 onMounted(() => {
-  getvalues();
+  getGames();
 });
 </script>
 
