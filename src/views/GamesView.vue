@@ -86,8 +86,8 @@ onMounted(() => {
       v-model="selectedGame"
       :options="games"
       option-label="title"
-      :scroll-height="100"
-      class="overflow-y-auto"
+      class="overflow-y-hidden py-1"
+      :scroll-height="'100%'"
       :striped="true"
       @change="selectionChange"
     />
