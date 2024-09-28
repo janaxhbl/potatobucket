@@ -16,27 +16,27 @@ let title: Ref<string> = ref("");
 let players: Ref<string[]> = ref([]);
 
 async function createGame() {
-  let doc_id: string = "";
-  let createGameData: Game = {
-    title: "",
-    players: [],
-    rounds: [],
-  };
-
-  createGameData.title = title.value;
-  createGameData.players = players.value;
-
-  console.log(createGameData);
-
-  doc_id = await FirestoreDB.createDocument("partien", createGameData);
-  console.log(doc_id);
-  // add doc_id to documents collection
   let documents = FirestoreDB.getAllInCollection("documents");
   documents.then(async (data) => {
-    // console.log(data[0].data().ids);
+    console.log(data[0].data().ids);
     let ids: string[] = data[0].data().ids as string[];
+    ids = ids == undefined ? [] : ids;
+    let gameID = ids == undefined ? 0 : ids.length;
+
+    let doc_id: string = "";
+    let createGameData: Game = {
+      id: gameID,
+      title: title.value,
+      players: players.value,
+      rounds: [],
+    };
+    console.log(createGameData);
+
+    doc_id = await FirestoreDB.createDocument("partien", createGameData);
+    console.log(doc_id);
+
     ids.push(doc_id);
-    FirestoreDB.updateDocument("documents", "document_ids", { ids });
+    await FirestoreDB.updateDocument("documents", "document_ids", { ids });
 
     title.value = "";
     players.value = [];
