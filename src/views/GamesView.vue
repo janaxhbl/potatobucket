@@ -36,7 +36,7 @@ async function createGame() {
     console.log(doc_id);
 
     ids.push(doc_id);
-    await FirestoreDB.updateDocument("documents", "document_ids", { ids });
+    await FirestoreDB.updateDocument("documents", "document_ids", { ids: ids });
 
     title.value = "";
     players.value = [];
