@@ -6,7 +6,7 @@ import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Listbox from "primevue/listbox";
-import { computed, onMounted, ref, type Ref } from "vue";
+import { onMounted, ref, type Ref } from "vue";
 
 let games: Ref<Game[]> = ref([]);
 let selectedGame: Ref<Game> = ref({} as Game);
@@ -71,10 +71,13 @@ onMounted(() => {
 <template>
   <div id="main" class="h-full flex flex-col overflow-hidden">
     <div
-      class="flex flex-row justify-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
+      class="flex flex-row justify-between items-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
     >
+      <h1 class="text-xl">Partien</h1>
+
       <Button
         raised
+        size="small"
         label="neue Partie erstellen"
         icon="pi pi-plus"
         @click="showCreateGamePopup = true"
