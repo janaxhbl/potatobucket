@@ -10,13 +10,13 @@ import {
 
 export class FirestoreDB {
   static async getAllInCollection(collection: string) {
-    console.log("getAllInCollection");
+    // console.log("getAllInCollection");
     const docs = await getDocsFromServer(this.makeCollection(collection));
     return docs.docs;
   }
 
   static async createDocument(collection: string, document: Object) {
-    console.log("createDocument");
+    // console.log("createDocument");
     const doc = await addDoc(this.makeCollection(collection), document);
     return doc.id;
   }
@@ -26,7 +26,7 @@ export class FirestoreDB {
     documentId: string,
     data: Object
   ) {
-    console.log("updateDocument");
+    // console.log("updateDocument");
     await updateDoc(
       doc(this.makeCollection(collection), documentId),
       data as any
