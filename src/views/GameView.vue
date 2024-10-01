@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { FirestoreDB } from "@/database";
 import type { Game } from "@/interfaces/Game";
+import type { GameType } from "@/interfaces/GameType";
 import type { Round } from "@/interfaces/Round";
 import Button from "primevue/button";
 import Column from "primevue/column";
@@ -11,8 +12,8 @@ import { onMounted, ref, type Ref } from "vue";
 import { useRoute } from "vue-router";
 
 let gameId: number = -1;
-
 let game: Ref<Game> = ref({} as Game);
+let gameType: Ref<GameType> = ref({} as GameType);
 let title: Ref<string> = ref("");
 let players_raw: Ref<string[]> = ref([]);
 let rounds_raw: Ref<Round[]> = ref([]);
@@ -32,33 +33,44 @@ function getCurrentGame() {
     games.sort((a, b) => a.id - b.id);
     game.value = games[gameId];
 
-    title.value = game.value.title;
-    players_raw.value = game.value.players;
-    rounds_raw.value = game.value.rounds;
-
-    // add as many nulls as there are players in the addRoundValues array
-    for (let i = 0; i < players_raw.value.length; i++) {
-      addRoundValues.value.push(null as unknown as number);
-    }
-
-    // format for datapanel
-    players.value = [];
-    for (let i = 0; i < players_raw.value.length; i++) {
-      players.value.push({
-        field: players_raw.value[i],
-        header: players_raw.value[i],
-      });
-    }
-
-    rounds.value = [];
-    for (let i = 0; i < rounds_raw.value.length; i++) {
-      let roundRaw = rounds_raw.value[i];
-      let round: { [key: string]: number } = {};
-      for (let j = 0; j < players_raw.value.length; j++) {
-        round[players_raw.value[j]] = roundRaw.points[j];
+    let gameTypeId = game.value.gameTypeId;
+    let data2 = FirestoreDB.getAllInCollection("game_types");
+    data2.then((value) => {
+      let gameTypes = value[0].data().game_types;
+      for (let i = 0; i < gameTypes.length; i++) {
+        if (gameTypes[i].id == gameTypeId) {
+          gameType.value = gameTypes[i];
+        }
       }
-      rounds.value.push(round);
-    }
+
+      title.value = game.value.title;
+      players_raw.value = game.value.players;
+      rounds_raw.value = game.value.rounds;
+
+      // add as many nulls as there are players in the addRoundValues array
+      for (let i = 0; i < players_raw.value.length; i++) {
+        addRoundValues.value.push(null as unknown as number);
+      }
+
+      // format for datapanel
+      players.value = [];
+      for (let i = 0; i < players_raw.value.length; i++) {
+        players.value.push({
+          field: players_raw.value[i],
+          header: players_raw.value[i],
+        });
+      }
+
+      rounds.value = [];
+      for (let i = 0; i < rounds_raw.value.length; i++) {
+        let roundRaw = rounds_raw.value[i];
+        let round: { [key: string]: number } = {};
+        for (let j = 0; j < players_raw.value.length; j++) {
+          round[players_raw.value[j]] = roundRaw.points[j];
+        }
+        rounds.value.push(round);
+      }
+    });
   });
 }
 
@@ -111,7 +123,6 @@ async function addRound(btnId: string) {
 
     let newRound: Round = { num: newRoundNum, points: cumulativeRoundValues };
     game.value.rounds.push(newRound);
-    console.log(game.value);
 
     FirestoreDB.updateDocument("partien", currDocID, game.value);
 
@@ -162,9 +173,10 @@ onMounted(() => {
         />
       </InputGroup>
 
-      <div class="flex gap-2 mb-2">
+      <div class="flex gap-2">
         <Button
-          label="Speichern +"
+          v-if="gameType.countType == 'plus'"
+          label="Speichern"
           icon="pi pi-save"
           icon-pos="left"
           class="w-full"
@@ -172,7 +184,8 @@ onMounted(() => {
         />
 
         <Button
-          label="Speichern -"
+          v-if="gameType.countType == 'minus'"
+          label="Speichern"
           icon="pi pi-save"
           icon-pos="left"
           class="w-full"
@@ -180,13 +193,13 @@ onMounted(() => {
         />
       </div>
 
-      <Button
+      <!-- <Button
         label="Speichern (absolute Werte)"
         icon="pi pi-save"
         icon-pos="left"
         class="w-full"
         @click="addRound('absolut')"
-      />
+      /> -->
     </div>
   </div>
 </template>
