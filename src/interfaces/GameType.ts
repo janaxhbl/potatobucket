@@ -1,4 +1,5 @@
 export interface GameType {
+  id: number | null;
   name: string;
   startValue: number | null;
   endValue: number | null;

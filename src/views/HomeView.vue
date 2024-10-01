@@ -17,12 +17,7 @@ let gameTypes: Ref<GameType[]> = ref([]);
 
 let newGameTypeListOption = ref([{ name: "neue Spielart hinzufügen" }]);
 let showCreateGameTypePopup: Ref<boolean> = ref(false);
-let newGameType: Ref<GameType> = ref({
-  name: "",
-  startValue: null,
-  endValue: null,
-  countType: "",
-});
+let newGameType: Ref<GameType> = ref({} as GameType);
 
 async function createNewGameType() {
   if (
@@ -33,6 +28,8 @@ async function createNewGameType() {
   ) {
     return;
   }
+
+  newGameType.value.id = gameTypes.value.length;
 
   if (newGameType.value.countType == "Runter") {
     newGameType.value.countType = "minus";
@@ -49,6 +46,7 @@ async function createNewGameType() {
   });
 
   newGameType.value = {
+    id: null,
     name: "",
     startValue: null,
     endValue: null,
@@ -98,6 +96,7 @@ onMounted(() => {
                 class="overflow-y-hidden py-1"
                 :scroll-height="'100%'"
                 :striped="true"
+                empty-message="keine Spielarten vorhanden"
               />
             </div>
           </AccordionContent>
@@ -143,16 +142,11 @@ onMounted(() => {
           </div>
         </div>
 
-        <div class="flex flex-row justify-center">
+        <div class="flex flex-row">
           <SelectButton
             v-model="newGameType.countType"
             :options="['Rauf', 'Runter']"
-            class="mb-4"
-            :pt="{
-              root: {
-                class: 'w-full',
-              },
-            }"
+            class="mb-4 flex w-full"
           />
         </div>
         <div class="flex justify-between gap-2">
@@ -172,3 +166,9 @@ onMounted(() => {
     </Dialog>
   </div>
 </template>
+
+<style>
+.p-togglebutton.p-component {
+  width: 50%;
+}
+</style>
