@@ -50,9 +50,9 @@ function createDefaultRound(): Round[] {
 async function createGame() {
   let documents = FirestoreDB.getAllInCollection("documents");
   documents.then(async (data) => {
-    let ids: string[] = data[0].data().ids as string[];
+    let ids: { game_id: number; doc_id: string }[] = data[0].data().ids;
     ids = ids == undefined ? [] : ids;
-    let gameID = ids == undefined ? 0 : ids.length;
+    let gameID = ids.length == 0 ? 0 : games.value[ids.length - 1].id + 1;
 
     let createGameData: Game = {
       id: gameID,
@@ -66,7 +66,7 @@ async function createGame() {
     let doc_id: string = "";
     doc_id = await FirestoreDB.createDocument("partien", createGameData);
 
-    ids.push(doc_id);
+    ids.push({ game_id: gameID, doc_id: doc_id });
     await FirestoreDB.updateDocument("documents", "document_ids", { ids: ids });
 
     title.value = "";
@@ -111,6 +111,7 @@ onMounted(() => {
 <template>
   <div id="main" class="h-full flex flex-col overflow-hidden">
     <div
+      id="header"
       class="flex flex-row justify-between items-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
     >
       <h1 class="text-xl">Partien</h1>

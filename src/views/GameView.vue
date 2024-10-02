@@ -20,6 +20,8 @@ let rounds_raw: Ref<Round[]> = ref([]);
 
 let players: Ref<{ field: string; header: string }[]> = ref([]);
 let rounds: Ref<any[]> = ref([]); // bsp: [{papa: 7, jana: 7}, {papa: 6, jana: 7}]
+let editingRounds = ref([]);
+let showEditColumn: Ref<boolean> = ref(false);
 
 let addRoundValues: Ref<number[]> = ref([]);
 
@@ -31,7 +33,11 @@ function getCurrentGame() {
       games.push(value[i].data() as Game);
     }
     games.sort((a, b) => a.id - b.id);
-    game.value = games[gameId];
+    for (let i = 0; i < games.length; i++) {
+      if (games[i].id == gameId) {
+        game.value = games[i];
+      }
+    }
 
     let gameTypeId = game.value.gameTypeId;
     let data2 = FirestoreDB.getAllInCollection("game_types");
@@ -64,7 +70,7 @@ function getCurrentGame() {
       rounds.value = [];
       for (let i = 0; i < rounds_raw.value.length; i++) {
         let roundRaw = rounds_raw.value[i];
-        let round: { [key: string]: number } = {};
+        let round: { [key: string]: number } = { num: roundRaw.num };
         for (let j = 0; j < players_raw.value.length; j++) {
           round[players_raw.value[j]] = roundRaw.points[j];
         }
@@ -77,8 +83,13 @@ function getCurrentGame() {
 async function addRound(btnId: string) {
   let documents = FirestoreDB.getAllInCollection("documents");
   documents.then(async (data) => {
-    let ids: string[] = data[0].data().ids as string[];
-    let currDocID = ids[gameId];
+    let ids: { game_id: number; doc_id: string }[] = data[0].data().ids;
+    let currDocID: string = "";
+    for (let i = 0; i < ids.length; i++) {
+      if (ids[i].game_id == gameId) {
+        currDocID = ids[i].doc_id;
+      }
+    }
 
     let everyThingIsNull: boolean = true;
     for (let i = 0; i < addRoundValues.value.length; i++) {
@@ -132,6 +143,46 @@ async function addRound(btnId: string) {
   });
 }
 
+const onRowEditSave = (event: { newData: any; index: any }) => {
+  let { newData, index } = event;
+
+  rounds.value[index] = newData;
+
+  let data = FirestoreDB.getAllInCollection("documents");
+  data.then((value) => {
+    let ids: { game_id: number; doc_id: string }[] = value[0].data().ids;
+    let currDocID: string = "";
+    for (let i = 0; i < ids.length; i++) {
+      if (ids[i].game_id == gameId) {
+        currDocID = ids[i].doc_id;
+      }
+    }
+    let round = rounds.value[index];
+    let round_num = round["num"];
+    let points: number[] = [];
+    let round_raw: Round = {} as Round;
+
+    delete round["num"];
+
+    for (let i = 0; i < players_raw.value.length; i++) {
+      points.push(round[players_raw.value[i]]);
+    }
+
+    let index_to_splice = rounds_raw.value.findIndex(
+      (obj) => obj.num == round_num
+    );
+    round_raw.num = round_num;
+    round_raw.points = points;
+    rounds_raw.value.splice(index_to_splice, 1, round_raw);
+
+    game.value.rounds = rounds_raw.value;
+
+    FirestoreDB.updateDocument("partien", currDocID, game.value);
+
+    showEditColumn.value = false;
+  });
+};
+
 onMounted(() => {
   gameId = Number(useRoute().params.id);
   getCurrentGame();
@@ -140,24 +191,46 @@ onMounted(() => {
 
 <template>
   <div id="main" class="h-full flex flex-col justify-between gap-4">
-    <div class="flex flex-col overflow-hidden gap-4">
-      <div id="header">
-        <h1 class="text-xl border-b-[1px] border-[#bb9d3a]">{{ title }}</h1>
+    <div class="flex flex-col overflow-hidden">
+      <div
+        id="header"
+        class="flex flex-row justify-between items-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
+      >
+        <h1 class="text-xl">{{ title }}</h1>
+        <Button
+          raised
+          size="small"
+          icon="pi pi-pencil"
+          @click="showEditColumn = !showEditColumn"
+        ></Button>
       </div>
 
       <div id="data" class="overflow-y-auto">
         <DataTable
           v-if="rounds && rounds.length > 0"
+          v-model:editing-rows="editingRounds"
+          edit-mode="row"
           :value="rounds"
           :striped-rows="true"
           :show-gridlines="false"
           class="rounded-lg overflow-hidden"
+          data-key="num"
+          @row-edit-save="onRowEditSave"
         >
           <Column
             v-for="p of players"
             :key="p.field"
             :field="p.field"
             :header="p.header"
+          >
+            <template #editor="{ data, field }">
+              <InputNumber v-model="data[field]" fluid />
+            </template>
+          </Column>
+          <Column
+            v-if="showEditColumn"
+            :row-editor="true"
+            body-style="padding: 0 !important; text-align: right;"
           ></Column>
         </DataTable>
       </div>
