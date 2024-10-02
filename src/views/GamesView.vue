@@ -185,7 +185,12 @@ onMounted(() => {
           severity="secondary"
           @click="showCreateGamePopup = false"
         ></Button>
-        <Button type="button" label="Erstellen" @click="createGame"></Button>
+        <Button
+          raised
+          type="button"
+          label="Erstellen"
+          @click="createGame"
+        ></Button>
       </div>
     </Dialog>
   </div>

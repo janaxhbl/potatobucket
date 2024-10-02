@@ -197,12 +197,6 @@ onMounted(() => {
         class="flex flex-row justify-between items-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
       >
         <h1 class="text-xl">{{ title }}</h1>
-        <Button
-          raised
-          size="small"
-          icon="pi pi-pencil"
-          @click="showEditColumn = !showEditColumn"
-        ></Button>
       </div>
 
       <div id="data" class="overflow-y-auto">
@@ -249,6 +243,7 @@ onMounted(() => {
       <div class="flex gap-2">
         <Button
           v-if="gameType.countType == 'plus'"
+          raised
           label="Speichern"
           icon="pi pi-save"
           icon-pos="left"
@@ -258,15 +253,24 @@ onMounted(() => {
 
         <Button
           v-if="gameType.countType == 'minus'"
+          raised
           label="Speichern"
           icon="pi pi-save"
           icon-pos="left"
           class="w-full"
           @click="addRound('minus')"
         />
+
+        <Button
+          severity="secondary"
+          size="small"
+          icon="pi pi-pencil"
+          @click="showEditColumn = !showEditColumn"
+        ></Button>
       </div>
 
       <!-- <Button
+        raised
         label="Speichern (absolute Werte)"
         icon="pi pi-save"
         icon-pos="left"

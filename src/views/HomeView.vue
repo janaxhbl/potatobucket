@@ -157,6 +157,7 @@ onMounted(() => {
             @click="showCreateGameTypePopup = false"
           ></Button>
           <Button
+            raised
             type="button"
             label="Erstellen"
             @click="createNewGameType"
