@@ -2,6 +2,7 @@ import { getApp } from "firebase/app";
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDocsFromServer,
   getFirestore,
@@ -31,6 +32,10 @@ export class FirestoreDB {
       doc(this.makeCollection(collection), documentId),
       data as any
     );
+  }
+
+  static async deleteDocument(collection: string, documentId: string) {
+    await deleteDoc(doc(this.makeCollection(collection), documentId));
   }
 
   private static makeCollection(collectionName: string) {
