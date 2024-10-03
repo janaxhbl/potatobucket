@@ -240,7 +240,11 @@ onMounted(() => {
             :header="p.header"
           >
             <template #editor="{ data, field }">
-              <InputNumber v-model="data[field]" fluid />
+              <InputNumber
+                v-model="data[field]"
+                class="editRowInputNumber"
+                fluid
+              />
             </template>
           </Column>
           <Column
@@ -302,3 +306,10 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style>
+td:has(> span.editRowInputNumber) {
+  padding-left: 0.25rem !important;
+  padding-right: 0.25rem !important;
+}
+</style>
