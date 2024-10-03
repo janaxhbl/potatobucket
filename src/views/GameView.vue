@@ -19,8 +19,8 @@ let players_raw: Ref<string[]> = ref([]);
 let rounds_raw: Ref<Round[]> = ref([]);
 
 let players: Ref<{ field: string; header: string }[]> = ref([]);
-let rounds: Ref<any[]> = ref([]); // bsp: [{papa: 7, jana: 7}, {papa: 6, jana: 7}]
-let editingRounds = ref([]);
+let rounds: Ref<any[]> = ref([]); // bsp: [{num: 1, papa: 7, jana: 7}, {num: 2, papa: 6, jana: 7}]
+let editingRounds: Ref<any[]> = ref([]);
 let showEditColumn: Ref<boolean> = ref(false);
 
 let addRoundValues: Ref<number[]> = ref([]);
@@ -143,6 +143,12 @@ async function addRound(btnId: string) {
   });
 }
 
+const onRowEditCancel = () => {
+  if (editingRounds.value.length == 0) {
+    showEditColumn.value = false;
+  }
+};
+
 const onRowEditSave = (event: { newData: any; index: any }) => {
   let { newData, index } = event;
 
@@ -179,9 +185,24 @@ const onRowEditSave = (event: { newData: any; index: any }) => {
 
     FirestoreDB.updateDocument("partien", currDocID, game.value);
 
-    showEditColumn.value = false;
+    if (editingRounds.value.length == 0) {
+      showEditColumn.value = false;
+    }
   });
 };
+
+function showEditColumns() {
+  if (showEditColumn.value == true) {
+    editingRounds.value.splice(0, editingRounds.value.length);
+    showEditColumn.value = false;
+  } else {
+    showEditColumn.value = true;
+    console.log(rounds.value);
+    let lastRound = rounds.value[rounds.value.length - 1];
+    console.log(lastRound);
+    editingRounds.value.push(lastRound);
+  }
+}
 
 onMounted(() => {
   gameId = Number(useRoute().params.id);
@@ -210,6 +231,7 @@ onMounted(() => {
           class="rounded-lg overflow-hidden"
           data-key="num"
           @row-edit-save="onRowEditSave"
+          @row-edit-cancel="onRowEditCancel"
         >
           <Column
             v-for="p of players"
@@ -230,7 +252,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div id="buttons">
+    <div v-if="!showEditColumn" id="buttons">
       <InputGroup class="mb-2">
         <InputNumber
           v-for="i in players_raw.length"
@@ -265,7 +287,7 @@ onMounted(() => {
           severity="secondary"
           size="small"
           icon="pi pi-pencil"
-          @click="showEditColumn = !showEditColumn"
+          @click="showEditColumns"
         ></Button>
       </div>
 
