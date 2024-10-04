@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { FirestoreDB } from "@/database";
+import type { Game } from "@/interfaces/Game";
 import type { GameType } from "@/interfaces/GameType";
 import Accordion from "primevue/accordion";
 import AccordionContent from "primevue/accordioncontent";
@@ -21,6 +22,9 @@ let newGameType: Ref<GameType> = ref({} as GameType);
 
 let showEditGameTypePopup: Ref<boolean> = ref(false);
 let selectedGameType: Ref<GameType> = ref({} as GameType);
+
+let finishedGames: Ref<Game[]> = ref([]);
+let selectedFinishedGame: Ref<Game> = ref({} as Game);
 
 async function createNewGameType() {
   if (
@@ -82,6 +86,49 @@ async function editGameType() {
   selectedGameType.value = {} as GameType;
 }
 
+function viewGame() {
+  console.log(selectedFinishedGame.value);
+}
+
+async function unfinishGame(
+  event: { stopPropagation: () => void },
+  game_id: number
+) {
+  event.stopPropagation();
+
+  let documents = FirestoreDB.getAllInCollection("documents");
+  documents.then((data) => {
+    let ids: { game_id: number; doc_id: string }[] = data[0].data().ids;
+    ids = ids == undefined ? [] : ids;
+    let currDocID: string = "";
+    for (let i = 0; i < ids.length; i++) {
+      if (ids[i].game_id == game_id) {
+        currDocID = ids[i].doc_id;
+      }
+    }
+
+    let games = FirestoreDB.getAllInCollection("partien");
+    games.then(async (data2) => {
+      let game: Game = {} as Game;
+      let games: Game[] = [];
+      for (let i = 0; i < data2.length; i++) {
+        games.push(data2[i].data() as Game);
+      }
+      games.sort((a, b) => a.id - b.id);
+      for (let i = 0; i < games.length; i++) {
+        if (games[i].id == game_id) {
+          game = games[i];
+        }
+      }
+      game.finished = false;
+
+      await FirestoreDB.updateDocument("partien", currDocID, game);
+
+      getGames();
+    });
+  });
+}
+
 async function getGameTypes() {
   let data = FirestoreDB.getAllInCollection("game_types");
   data.then((value) => {
@@ -92,8 +139,23 @@ async function getGameTypes() {
   });
 }
 
+function getGames() {
+  let data = FirestoreDB.getAllInCollection("partien");
+  data.then((value) => {
+    finishedGames.value = [];
+
+    for (let i = 0; i < value.length; i++) {
+      if (value[i].data().finished == true)
+        finishedGames.value.push(value[i].data() as Game);
+    }
+
+    finishedGames.value.sort((a, b) => a.id - b.id);
+  });
+}
+
 onMounted(() => {
   getGameTypes();
+  getGames();
 });
 </script>
 
@@ -126,6 +188,43 @@ onMounted(() => {
                 empty-message="keine Spielarten vorhanden"
                 @change="openEditGameTypePopup"
               />
+            </div>
+          </AccordionContent>
+        </AccordionPanel>
+        <AccordionPanel value="1">
+          <AccordionHeader>Abgeschlossene Partien</AccordionHeader>
+          <AccordionContent>
+            <div class="pt-4">
+              <Listbox
+                v-model="selectedFinishedGame"
+                :options="finishedGames"
+                option-label="title"
+                class="overflow-y-hidden py-1"
+                :scroll-height="'100%'"
+                :striped="true"
+                empty-message="keine abgeschlossenen Partien vorhanden"
+                @change="viewGame"
+              >
+                <template #option="slotProps">
+                  <div
+                    class="flex flex-row justify-between items-center w-full"
+                  >
+                    <div>
+                      {{ slotProps.option.title }}
+                      {{ slotProps.option.finished }}
+                    </div>
+                    <div>
+                      <i
+                        class="pi pi-refresh text-sm text-blue-700"
+                        style="
+                          -webkit-transform: scaleX(-1);
+                          transform: scaleX(-1);
+                        "
+                        @click="unfinishGame($event, slotProps.option.id)"
+                      ></i>
+                    </div>
+                  </div> </template
+              ></Listbox>
             </div>
           </AccordionContent>
         </AccordionPanel>
