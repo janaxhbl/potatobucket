@@ -6,4 +6,5 @@ export interface Game {
   gameTypeId: number;
   players: string[];
   rounds: Round[];
+  finished: boolean;
 }

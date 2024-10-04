@@ -64,6 +64,7 @@ async function createGame() {
       gameTypeId: selectedGameType.value.id as number,
       players: players.value,
       rounds: createDefaultRound(),
+      finished: false,
     };
 
     let doc_id: string = "";
@@ -124,13 +125,53 @@ async function deleteGame() {
   });
 }
 
+async function finishGame(
+  event: { stopPropagation: () => void },
+  game_id: number
+) {
+  event.stopPropagation();
+
+  let documents = FirestoreDB.getAllInCollection("documents");
+  documents.then((data) => {
+    let ids: { game_id: number; doc_id: string }[] = data[0].data().ids;
+    ids = ids == undefined ? [] : ids;
+    let currDocID: string = "";
+    for (let i = 0; i < ids.length; i++) {
+      if (ids[i].game_id == game_id) {
+        currDocID = ids[i].doc_id;
+      }
+    }
+
+    let games = FirestoreDB.getAllInCollection("partien");
+    games.then(async (data2) => {
+      let game: Game = {} as Game;
+      let games: Game[] = [];
+      for (let i = 0; i < data2.length; i++) {
+        games.push(data2[i].data() as Game);
+      }
+      games.sort((a, b) => a.id - b.id);
+      for (let i = 0; i < games.length; i++) {
+        if (games[i].id == game_id) {
+          game = games[i];
+        }
+      }
+      game.finished = true;
+
+      await FirestoreDB.updateDocument("partien", currDocID, game);
+
+      getGames();
+    });
+  });
+}
+
 function getGames() {
   let data = FirestoreDB.getAllInCollection("partien");
   data.then((value) => {
     games.value = [];
 
     for (let i = 0; i < value.length; i++) {
-      games.value.push(value[i].data() as Game);
+      if (value[i].data().finished == false)
+        games.value.push(value[i].data() as Game);
     }
 
     games.value.sort((a, b) => a.id - b.id);
@@ -186,10 +227,16 @@ onMounted(() => {
           <div>
             {{ slotProps.option.title }} {{ slotProps.option.finished }}
           </div>
-          <i
-            class="pi pi-trash text-sm text-red-800"
-            @click="openDeletePopup($event, slotProps.option.id)"
-          ></i>
+          <div>
+            <i
+              class="pi pi-check text-sm text-green-600"
+              @click="finishGame($event, slotProps.option.id)"
+            ></i>
+            <i
+              class="pi pi-trash text-sm text-red-800 ml-2"
+              @click="openDeletePopup($event, slotProps.option.id)"
+            ></i>
+          </div>
         </div>
       </template>
     </Listbox>
