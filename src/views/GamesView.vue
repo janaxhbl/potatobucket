@@ -53,13 +53,13 @@ function createDefaultRound(): Round[] {
 async function createGame() {
   let documents = FirestoreDB.getAllInCollection("documents");
   documents.then(async (data) => {
-    let ids: { game_id: number; doc_id: string }[] = data[0].data().ids;
-    ids = ids == undefined ? [] : ids;
-    let gameID = ids.length == 0 ? 0 : games.value[ids.length - 1].id + 1;
+    let doc_ids: { game_id: number; doc_id: string }[] = data[0].data().ids;
+    doc_ids = doc_ids == undefined ? [] : doc_ids;
+    let game_counter = await FirestoreDB.getAllInCollection("games_counter");
+    let gameID: number = game_counter[0].data().games_counter;
 
     let createGameData: Game = {
       id: gameID,
-      // title: title.value,
       title: createTitle(),
       gameTypeId: selectedGameType.value.id as number,
       players: players.value,
@@ -69,8 +69,14 @@ async function createGame() {
     let doc_id: string = "";
     doc_id = await FirestoreDB.createDocument("partien", createGameData);
 
-    ids.push({ game_id: gameID, doc_id: doc_id });
-    await FirestoreDB.updateDocument("documents", "document_ids", { ids: ids });
+    doc_ids.push({ game_id: gameID, doc_id: doc_id });
+    await FirestoreDB.updateDocument("documents", "document_ids", {
+      ids: doc_ids,
+    });
+
+    await FirestoreDB.updateDocument("games_counter", "games_counter", {
+      games_counter: ++gameID,
+    });
 
     title.value = "";
     players.value = [];
@@ -177,7 +183,9 @@ onMounted(() => {
     >
       <template #option="slotProps">
         <div class="flex flex-row justify-between items-center w-full">
-          <div>{{ slotProps.option.title }}</div>
+          <div>
+            {{ slotProps.option.title }} {{ slotProps.option.finished }}
+          </div>
           <i
             class="pi pi-trash text-sm text-red-800"
             @click="openDeletePopup($event, slotProps.option.id)"
