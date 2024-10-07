@@ -204,6 +204,26 @@ function showEditColumns() {
   }
 }
 
+function finishGame() {
+  let documents = FirestoreDB.getAllInCollection("documents");
+  documents.then(async (data) => {
+    let ids: { game_id: number; doc_id: string }[] = data[0].data().ids;
+    ids = ids == undefined ? [] : ids;
+    let currDocID: string = "";
+    for (let i = 0; i < ids.length; i++) {
+      if (ids[i].game_id == gameId) {
+        currDocID = ids[i].doc_id;
+      }
+    }
+
+    game.value.finished = true;
+
+    await FirestoreDB.updateDocument("partien", currDocID, game.value);
+
+    getCurrentGame();
+  });
+}
+
 onMounted(() => {
   gameId = Number(useRoute().params.id);
   getCurrentGame();
@@ -218,6 +238,15 @@ onMounted(() => {
         class="flex flex-row justify-between items-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
       >
         <h1 class="text-xl">{{ title }}</h1>
+
+        <Button
+          v-if="game.finished == false"
+          raised
+          size="small"
+          label="abschließen"
+          icon="pi pi-check"
+          @click="finishGame"
+        ></Button>
       </div>
 
       <div id="data" class="overflow-y-auto">
