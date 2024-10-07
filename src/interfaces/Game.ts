@@ -1,3 +1,4 @@
+import type { OldGame } from "./OldGame";
 import type { Round } from "./Round";
 
 export interface Game {
@@ -7,4 +8,6 @@ export interface Game {
   players: string[];
   rounds: Round[];
   finished: boolean;
+  endValueReached: boolean;
+  oldGames: OldGame[];
 }

@@ -65,6 +65,8 @@ async function createGame() {
       players: players.value,
       rounds: createDefaultRound(),
       finished: false,
+      endValueReached: false,
+      oldGames: [],
     };
 
     let doc_id: string = "";
