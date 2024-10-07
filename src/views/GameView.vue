@@ -256,7 +256,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div v-if="!showEditColumn" id="buttons">
+    <div v-if="!showEditColumn && game.finished == false" id="buttons">
       <InputGroup class="mb-2">
         <InputNumber
           v-for="i in players_raw.length"

@@ -2,6 +2,7 @@
 import { FirestoreDB } from "@/database";
 import type { Game } from "@/interfaces/Game";
 import type { GameType } from "@/interfaces/GameType";
+import router from "@/router/router";
 import Accordion from "primevue/accordion";
 import AccordionContent from "primevue/accordioncontent";
 import AccordionHeader from "primevue/accordionheader";
@@ -87,7 +88,7 @@ async function editGameType() {
 }
 
 function viewGame() {
-  console.log(selectedFinishedGame.value);
+  router.push("/game/" + selectedFinishedGame.value.id);
 }
 
 async function unfinishGame(
