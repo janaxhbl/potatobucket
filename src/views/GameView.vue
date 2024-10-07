@@ -80,7 +80,7 @@ function getCurrentGame() {
   });
 }
 
-async function addRound(btnId: string) {
+async function addRound() {
   let documents = FirestoreDB.getAllInCollection("documents");
   documents.then(async (data) => {
     let ids: { game_id: number; doc_id: string }[] = data[0].data().ids;
@@ -109,31 +109,45 @@ async function addRound(btnId: string) {
     newRoundNum++;
     let cumulativeRoundValues: number[] = [];
 
-    if (btnId == "absolut") {
-      for (let i = 0; i < addRoundValues.value.length; i++) {
-        cumulativeRoundValues.push(addRoundValues.value[i]);
-      }
-    } else {
-      let pointsOfLastRound: number[] =
-        rounds_raw.value[rounds_raw.value.length - 1].points;
+    let pointsOfLastRound: number[] =
+      rounds_raw.value[rounds_raw.value.length - 1].points;
 
-      if (btnId == "plus") {
-        for (let i = 0; i < pointsOfLastRound.length; i++) {
-          cumulativeRoundValues.push(
-            pointsOfLastRound[i] + addRoundValues.value[i]
-          );
-        }
-      } else if (btnId == "minus") {
-        for (let i = 0; i < pointsOfLastRound.length; i++) {
-          cumulativeRoundValues.push(
-            pointsOfLastRound[i] - addRoundValues.value[i]
-          );
-        }
+    if (gameType.value.countType == "plus") {
+      for (let i = 0; i < pointsOfLastRound.length; i++) {
+        cumulativeRoundValues.push(
+          pointsOfLastRound[i] + addRoundValues.value[i]
+        );
+      }
+    } else if (gameType.value.countType == "minus") {
+      for (let i = 0; i < pointsOfLastRound.length; i++) {
+        cumulativeRoundValues.push(
+          pointsOfLastRound[i] - addRoundValues.value[i]
+        );
       }
     }
 
     let newRound: Round = { num: newRoundNum, points: cumulativeRoundValues };
     game.value.rounds.push(newRound);
+
+    if (gameType.value.endValue != null) {
+      for (let i = 0; i < newRound.points.length; i++) {
+        if (
+          (gameType.value.countType == "plus" &&
+            newRound.points[i] >= gameType.value.endValue) ||
+          (gameType.value.countType == "minus" &&
+            newRound.points[i] <= gameType.value.endValue)
+        ) {
+          newRoundNum++;
+          let newPoints: number[] = [];
+          for (let i = 0; i < players_raw.value.length; i++) {
+            newPoints.push(gameType.value.startValue as number);
+          }
+          newRound = { num: newRoundNum, points: newPoints };
+          game.value.rounds.push(newRound);
+          break;
+        }
+      }
+    }
 
     FirestoreDB.updateDocument("partien", currDocID, game.value);
 
@@ -197,9 +211,7 @@ function showEditColumns() {
     showEditColumn.value = false;
   } else {
     showEditColumn.value = true;
-    console.log(rounds.value);
     let lastRound = rounds.value[rounds.value.length - 1];
-    console.log(lastRound);
     editingRounds.value.push(lastRound);
   }
 }
@@ -303,7 +315,7 @@ onMounted(() => {
           icon="pi pi-save"
           icon-pos="left"
           class="w-full"
-          @click="addRound('plus')"
+          @click="addRound"
         />
 
         <Button
@@ -313,7 +325,7 @@ onMounted(() => {
           icon="pi pi-save"
           icon-pos="left"
           class="w-full"
-          @click="addRound('minus')"
+          @click="addRound"
         />
 
         <Button
@@ -323,15 +335,6 @@ onMounted(() => {
           @click="showEditColumns"
         ></Button>
       </div>
-
-      <!-- <Button
-        raised
-        label="Speichern (absolute Werte)"
-        icon="pi pi-save"
-        icon-pos="left"
-        class="w-full"
-        @click="addRound('absolut')"
-      /> -->
     </div>
   </div>
 </template>
