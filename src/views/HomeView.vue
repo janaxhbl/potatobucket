@@ -27,6 +27,9 @@ let selectedGameType: Ref<GameType> = ref({} as GameType);
 let finishedGames: Ref<Game[]> = ref([]);
 let selectedFinishedGame: Ref<Game> = ref({} as Game);
 
+let gameToDelete: Ref<Game> = ref({} as Game);
+let showDeleteGamePopup: Ref<boolean> = ref(false);
+
 async function createNewGameType() {
   if (
     newGameType.value.name == null ||
@@ -130,6 +133,43 @@ async function unfinishGame(
   });
 }
 
+function openDeletePopup(
+  event: { stopPropagation: () => void },
+  game_id: number
+) {
+  event.stopPropagation();
+  for (let i = 0; i < finishedGames.value.length; i++) {
+    if (finishedGames.value[i].id == game_id) {
+      gameToDelete.value = finishedGames.value[i];
+    }
+  }
+  showDeleteGamePopup.value = true;
+}
+
+async function deleteGame() {
+  let documents = FirestoreDB.getAllInCollection("documents");
+  documents.then(async (data) => {
+    let ids: { game_id: number; doc_id: string }[] = data[0].data().ids;
+    ids = ids == undefined ? [] : ids;
+    let currDocID: string = "";
+    for (let i = 0; i < ids.length; i++) {
+      if (ids[i].game_id == gameToDelete.value.id) {
+        currDocID = ids[i].doc_id;
+      }
+    }
+
+    let index_to_splice = ids.findIndex((obj) => obj.doc_id == currDocID);
+    ids.splice(index_to_splice, 1);
+
+    await FirestoreDB.updateDocument("documents", "document_ids", { ids: ids });
+    await FirestoreDB.deleteDocument("partien", currDocID);
+
+    showDeleteGamePopup.value = false;
+    gameToDelete.value = {} as Game;
+    getGames();
+  });
+}
+
 async function getGameTypes() {
   let data = FirestoreDB.getAllInCollection("game_types");
   data.then((value) => {
@@ -221,6 +261,10 @@ onMounted(() => {
                           transform: scaleX(-1);
                         "
                         @click="unfinishGame($event, slotProps.option.id)"
+                      ></i>
+                      <i
+                        class="pi pi-trash text-sm text-red-800 ml-2"
+                        @click="openDeletePopup($event, slotProps.option.id)"
                       ></i>
                     </div>
                   </div> </template
@@ -352,6 +396,32 @@ onMounted(() => {
             @click="editGameType"
           ></Button>
         </div>
+      </div>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="showDeleteGamePopup"
+      modal
+      :closable="false"
+      :header="
+        'Soll Partie ' + gameToDelete.title + ' wirklich gelöscht werden?'
+      "
+      :style="{ width: '80vw' }"
+    >
+      <div class="flex justify-between gap-2">
+        <Button
+          type="button"
+          label="Abbrechen"
+          severity="secondary"
+          @click="showDeleteGamePopup = false"
+        ></Button>
+        <Button
+          raised
+          severity="danger"
+          type="button"
+          label="Löschen"
+          @click="deleteGame"
+        ></Button>
       </div>
     </Dialog>
   </div>
