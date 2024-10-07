@@ -211,7 +211,6 @@ onMounted(() => {
                   >
                     <div>
                       {{ slotProps.option.title }}
-                      {{ slotProps.option.finished }}
                     </div>
                     <div>
                       <i

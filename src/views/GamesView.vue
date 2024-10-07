@@ -225,7 +225,7 @@ onMounted(() => {
       <template #option="slotProps">
         <div class="flex flex-row justify-between items-center w-full">
           <div>
-            {{ slotProps.option.title }} {{ slotProps.option.finished }}
+            {{ slotProps.option.title }}
           </div>
           <div>
             <i
