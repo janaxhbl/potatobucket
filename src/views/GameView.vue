@@ -316,14 +316,17 @@ onMounted(() => {
         id="buttons"
       >
         <h1 class="ml-0.5">aktueller Schrieb:</h1>
-        <InputGroup class="mb-2">
-          <InputNumber
-            v-for="i in players_raw.length"
-            :key="i - 1"
-            v-model="addRoundValues[i - 1]"
-            :placeholder="players_raw[i - 1]"
-          />
-        </InputGroup>
+        <div class="overflow-auto">
+          <InputGroup class="mb-2">
+            <InputNumber
+              v-for="i in players_raw.length"
+              :key="i - 1"
+              v-model="addRoundValues[i - 1]"
+              :placeholder="players_raw[i - 1]"
+              class="min-w-12"
+            />
+          </InputGroup>
+        </div>
 
         <div class="flex gap-2">
           <Button
