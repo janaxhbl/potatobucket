@@ -315,6 +315,7 @@ onMounted(() => {
         "
         id="buttons"
       >
+        <h1 class="ml-0.5">aktueller Schrieb:</h1>
         <InputGroup class="mb-2">
           <InputNumber
             v-for="i in players_raw.length"
