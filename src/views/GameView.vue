@@ -40,7 +40,6 @@ function getCurrentGame() {
         game.value = games[i];
       }
     }
-    console.log(game.value);
 
     let gameTypeId = game.value.gameTypeId;
     let data2 = FirestoreDB.getAllInCollection("game_types");
