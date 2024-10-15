@@ -10,4 +10,6 @@ export interface Game {
   finished: boolean;
   endValueReached: boolean;
   oldGames: OldGame[];
+  roundDealer: number;
+  gameDealer: number;
 }

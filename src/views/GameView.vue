@@ -40,6 +40,7 @@ function getCurrentGame() {
         game.value = games[i];
       }
     }
+    console.log(game.value);
 
     let gameTypeId = game.value.gameTypeId;
     let data2 = FirestoreDB.getAllInCollection("game_types");
@@ -131,7 +132,13 @@ async function addRound() {
   let newRound: Round = { num: newRoundNum, points: cumulativeRoundValues };
   game.value.rounds.push(newRound);
 
+  game.value.roundDealer++;
+  if (game.value.roundDealer >= players_raw.value.length) {
+    game.value.roundDealer = 0;
+  }
+
   if (gameType.value.endValue != null) {
+    // kann eh ned null sein, aber gameType.value.endValue schreit sonst im unteren if-statement
     for (let i = 0; i < newRound.points.length; i++) {
       if (
         (gameType.value.countType == "plus" &&
@@ -140,6 +147,11 @@ async function addRound() {
           newRound.points[i] <= gameType.value.endValue)
       ) {
         game.value.endValueReached = true;
+        game.value.gameDealer++;
+        if (game.value.gameDealer >= players_raw.value.length) {
+          game.value.gameDealer = 0;
+        }
+        game.value.roundDealer = game.value.gameDealer;
         break;
       }
     }
@@ -229,6 +241,16 @@ async function finishGame() {
   getCurrentGame();
 }
 
+function getHeaderClass(p: any) {
+  if (
+    p.header == players_raw.value[game.value.roundDealer] &&
+    !game.value.endValueReached
+  ) {
+    return "!text-green-500";
+  }
+  return "";
+}
+
 onMounted(() => {
   gameId = Number(useRoute().params.id);
   getCurrentGame();
@@ -272,6 +294,7 @@ onMounted(() => {
             :key="p.field"
             :field="p.field"
             :header="p.header"
+            :header-class="getHeaderClass(p)"
           >
             <template #editor="{ data, field }">
               <InputNumber

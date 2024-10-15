@@ -67,6 +67,8 @@ async function createGame() {
       finished: false,
       endValueReached: false,
       oldGames: [],
+      roundDealer: 0,
+      gameDealer: 0,
     };
 
     let doc_id: string = "";
