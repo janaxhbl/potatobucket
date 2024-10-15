@@ -343,10 +343,10 @@ onMounted(() => {
         <h1
           class="text-5xl font-semibold text-center pb-4"
           style="
-            background: rgb(255, 145, 0);
+            background: rgba(34, 197, 94, 1);
             background: linear-gradient(
               127deg,
-              rgba(249 115 22, 1) 24%,
+              rgba(249, 115, 22, 1) 24%,
               rgba(34, 197, 94, 1) 59%,
               rgba(255, 34, 0, 1) 73%
             );
