@@ -26,6 +26,7 @@ let editingRounds: Ref<any[]> = ref([]);
 let showEditColumn: Ref<boolean> = ref(false);
 
 let addRoundValues: Ref<number[]> = ref([]);
+let winner: Ref<string> = ref("");
 
 function getCurrentGame() {
   let data = FirestoreDB.getAllInCollection("partien");
@@ -54,6 +55,25 @@ function getCurrentGame() {
       title.value = game.value.title;
       players_raw.value = game.value.players;
       rounds_raw.value = game.value.rounds;
+
+      if (game.value.endValueReached) {
+        let pointsOfLastRound =
+          rounds_raw.value[rounds_raw.value.length - 1].points;
+        let max_min_points: number = pointsOfLastRound[0];
+        let player_id: number = 0;
+        for (let i = 1; i < pointsOfLastRound.length; i++) {
+          if (
+            (gameType.value.countType == "plus" &&
+              pointsOfLastRound[i] > max_min_points) ||
+            (gameType.value.countType == "minus" &&
+              pointsOfLastRound[i] < max_min_points)
+          ) {
+            max_min_points = pointsOfLastRound[i];
+            player_id = i;
+          }
+        }
+        winner.value = players_raw.value[player_id];
+      }
 
       // add as many nulls as there are players in the addRoundValues array
       for (let i = 0; i < players_raw.value.length; i++) {
@@ -320,6 +340,22 @@ onMounted(() => {
           game.endValueReached == true
         "
       >
+        <h1
+          class="text-5xl font-semibold text-center pb-4"
+          style="
+            background: rgb(255, 145, 0);
+            background: linear-gradient(
+              127deg,
+              rgba(249 115 22, 1) 24%,
+              rgba(34, 197, 94, 1) 59%,
+              rgba(255, 34, 0, 1) 73%
+            );
+            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+          "
+        >
+          {{ winner }} hat gewonnen!
+        </h1>
         <Button
           raised
           label="Neue Runde starten"
