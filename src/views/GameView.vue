@@ -350,6 +350,7 @@ onMounted(() => {
               rgba(34, 197, 94, 1) 59%,
               rgba(255, 34, 0, 1) 73%
             );
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             -webkit-background-clip: text;
           "

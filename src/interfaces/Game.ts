@@ -12,4 +12,5 @@ export interface Game {
   oldGames: OldGame[];
   roundDealer: number;
   gameDealer: number;
+  bummerl: number[];
 }

@@ -58,6 +58,11 @@ async function createGame() {
     let game_counter = await FirestoreDB.getAllInCollection("games_counter");
     let gameID: number = game_counter[0].data().games_counter;
 
+    let _bummerl: number[] = [];
+    for (let i = 0; i < players.value.length; i++) {
+      _bummerl.push(0);
+    }
+
     let createGameData: Game = {
       id: gameID,
       title: createTitle(),
@@ -69,6 +74,7 @@ async function createGame() {
       oldGames: [],
       roundDealer: 0,
       gameDealer: 0,
+      bummerl: _bummerl,
     };
 
     let doc_id: string = "";
