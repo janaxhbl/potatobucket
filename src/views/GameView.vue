@@ -9,6 +9,7 @@ import Column from "primevue/column";
 import DataTable from "primevue/datatable";
 import InputGroup from "primevue/inputgroup";
 import InputNumber from "primevue/inputnumber";
+import InputText from "primevue/inputtext";
 import { onMounted, ref, type Ref } from "vue";
 import { useRoute } from "vue-router";
 
@@ -17,6 +18,7 @@ let docId: string = "";
 let game: Ref<Game> = ref({} as Game);
 let gameType: Ref<GameType> = ref({} as GameType);
 let title: Ref<string> = ref("");
+let showEditTitle: Ref<boolean> = ref(false);
 let players_raw: Ref<string[]> = ref([]);
 let rounds_raw: Ref<Round[]> = ref([]);
 
@@ -252,6 +254,12 @@ function showEditColumns() {
   }
 }
 
+function editTitle() {
+  showEditTitle.value = false;
+  game.value.title = title.value;
+  FirestoreDB.updateDocument("partien", docId, game.value);
+}
+
 async function finishGame() {
   game.value.finished = true;
 
@@ -283,10 +291,32 @@ onMounted(() => {
         id="header"
         class="flex flex-row justify-between items-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
       >
-        <h1 class="text-xl">{{ title }}</h1>
+        <div class="flex align-middle">
+          <InputText v-if="showEditTitle" v-model="title" type="text" />
+          <h1 v-else class="text-xl">{{ title }}</h1>
+
+          <Button
+            v-if="showEditTitle"
+            text
+            severity="secondary"
+            size="small"
+            icon="pi pi-check"
+            class="!pt-1 !bg-[#EBE0BD]"
+            @click="editTitle"
+          ></Button>
+          <Button
+            v-else
+            text
+            severity="secondary"
+            size="small"
+            icon="pi pi-pen-to-square"
+            class="!pt-1 !bg-[#EBE0BD]"
+            @click="showEditTitle = true"
+          ></Button>
+        </div>
 
         <Button
-          v-if="game.finished == false"
+          v-if="game.finished == false && game.endValueReached == true"
           raised
           size="small"
           label="abschließen"
@@ -400,7 +430,7 @@ onMounted(() => {
           <Button
             severity="secondary"
             size="small"
-            icon="pi pi-pencil"
+            icon="pi pi-pen-to-square"
             @click="showEditColumns"
           ></Button>
         </div>
