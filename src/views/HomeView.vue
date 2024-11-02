@@ -23,6 +23,8 @@ let newGameType: Ref<GameType> = ref({} as GameType);
 
 let showEditGameTypePopup: Ref<boolean> = ref(false);
 let selectedGameType: Ref<GameType> = ref({} as GameType);
+let showDeleteGameTypePopup: Ref<boolean> = ref(false);
+let gameTypeToDelete: Ref<GameType> = ref({} as GameType);
 
 let finishedGames: Ref<Game[]> = ref([]);
 let selectedFinishedGame: Ref<Game> = ref({} as Game);
@@ -133,7 +135,7 @@ async function unfinishGame(
   });
 }
 
-function openDeletePopup(
+function openGameDeletePopup(
   event: { stopPropagation: () => void },
   game_id: number
 ) {
@@ -144,6 +146,19 @@ function openDeletePopup(
     }
   }
   showDeleteGamePopup.value = true;
+}
+
+function openGameTypeDeletePopup(
+  event: { stopPropagation: () => void },
+  gameType_id: number
+) {
+  event.stopPropagation();
+  for (let i = 0; i < gameTypes.value.length; i++) {
+    if (gameTypes.value[i].id == gameType_id) {
+      gameTypeToDelete.value = gameTypes.value[i];
+    }
+  }
+  showDeleteGameTypePopup.value = true;
 }
 
 async function deleteGame() {
@@ -167,6 +182,50 @@ async function deleteGame() {
     showDeleteGamePopup.value = false;
     gameToDelete.value = {} as Game;
     getGames();
+  });
+}
+
+async function deleteGameType() {
+  let gameType_index_to_splice = gameTypes.value.findIndex(
+    (obj) => obj.id == gameTypeToDelete.value.id
+  );
+  gameTypes.value.splice(gameType_index_to_splice, 1);
+  await FirestoreDB.updateDocument("game_types", "game_types", {
+    game_types: gameTypes.value,
+  });
+
+  let games = FirestoreDB.getAllInCollection("partien");
+  games.then((data) => {
+    let allGames: Game[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+      allGames.push(data[i].data() as Game);
+    }
+
+    allGames.sort((a, b) => a.id - b.id);
+
+    let documents = FirestoreDB.getAllInCollection("documents");
+    documents.then(async (data2) => {
+      let ids: { game_id: number; doc_id: string }[] = data2[0].data().ids;
+      ids = ids == undefined ? [] : ids;
+
+      for (let i = 0; i < allGames.length; i++) {
+        if (allGames[i].gameTypeId == gameTypeToDelete.value.id) {
+          let ids_index_to_splice = ids.findIndex(
+            (obj) => obj.game_id == allGames[i].id
+          );
+          let doc_id: string = ids[ids_index_to_splice].doc_id;
+          ids.splice(ids_index_to_splice, 1);
+          await FirestoreDB.deleteDocument("partien", doc_id);
+        }
+      }
+      await FirestoreDB.updateDocument("documents", "document_ids", {
+        ids: ids,
+      });
+      showDeleteGameTypePopup.value = false;
+      gameTypeToDelete.value = {} as GameType;
+      getGameTypes();
+    });
   });
 }
 
@@ -228,7 +287,25 @@ onMounted(() => {
                 :striped="true"
                 empty-message="keine Spielarten vorhanden"
                 @change="openEditGameTypePopup"
-              />
+              >
+                <template #option="slotProps">
+                  <div
+                    class="flex flex-row justify-between items-center w-full"
+                  >
+                    <div>
+                      {{ slotProps.option.name }}
+                    </div>
+                    <div>
+                      <i
+                        class="pi pi-trash text-sm text-red-800 ml-2"
+                        @click="
+                          openGameTypeDeletePopup($event, slotProps.option.id)
+                        "
+                      ></i>
+                    </div>
+                  </div>
+                </template>
+              </Listbox>
             </div>
           </AccordionContent>
         </AccordionPanel>
@@ -264,11 +341,14 @@ onMounted(() => {
                       ></i>
                       <i
                         class="pi pi-trash text-sm text-red-800 ml-2"
-                        @click="openDeletePopup($event, slotProps.option.id)"
+                        @click="
+                          openGameDeletePopup($event, slotProps.option.id)
+                        "
                       ></i>
                     </div>
-                  </div> </template
-              ></Listbox>
+                  </div>
+                </template>
+              </Listbox>
             </div>
           </AccordionContent>
         </AccordionPanel>
@@ -421,6 +501,35 @@ onMounted(() => {
           type="button"
           label="Löschen"
           @click="deleteGame"
+        ></Button>
+      </div>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="showDeleteGameTypePopup"
+      modal
+      :closable="false"
+      :header="
+        'Soll Spielart ' + gameTypeToDelete.name + ' wirklich gelöscht werden?'
+      "
+      :style="{ width: '80vw' }"
+    >
+      <div class="pb-4">
+        <p>Partien mit dieser Spielart werden auch gelöscht!</p>
+      </div>
+      <div class="flex justify-between gap-2">
+        <Button
+          type="button"
+          label="Abbrechen"
+          severity="secondary"
+          @click="showDeleteGameTypePopup = false"
+        ></Button>
+        <Button
+          raised
+          severity="danger"
+          type="button"
+          label="Löschen"
+          @click="deleteGameType"
         ></Button>
       </div>
     </Dialog>
