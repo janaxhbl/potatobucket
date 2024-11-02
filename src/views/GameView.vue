@@ -74,7 +74,10 @@ function getCurrentGame() {
             player_id = i;
           }
         }
-        winner.value = players_raw.value[player_id];
+        winner.value =
+          players_raw.value[player_id] +
+          " hat " +
+          gameType.value.endValueReachedWinLose;
       }
 
       // add as many nulls as there are players in the addRoundValues array
@@ -385,7 +388,7 @@ onMounted(() => {
             -webkit-background-clip: text;
           "
         >
-          {{ winner }} hat gewonnen!
+          {{ winner }}
         </h1>
         <Button
           raised

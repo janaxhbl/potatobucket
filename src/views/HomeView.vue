@@ -71,6 +71,7 @@ async function createNewGameType() {
     startValue: null,
     endValue: null,
     countType: "",
+    endValueReachedWinLose: "gewonnen",
   };
   showCreateGameTypePopup.value = false;
   getGameTypes();
