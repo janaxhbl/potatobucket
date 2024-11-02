@@ -289,54 +289,54 @@ onMounted(() => {
 
 <template>
   <div id="main" class="h-full flex flex-col justify-between gap-4">
-    <div class="flex flex-col overflow-hidden">
-      <div
-        id="header"
-        class="flex flex-row justify-between items-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
-      >
-        <div class="flex align-middle">
-          <InputText v-if="showEditTitle" v-model="title" type="text" />
-          <h1 v-else class="text-xl">{{ title }}</h1>
-
-          <Button
-            v-if="showEditTitle"
-            text
-            severity="secondary"
-            size="small"
-            icon="pi pi-check"
-            class="!pt-1 !bg-[#EBE0BD]"
-            @click="editTitle"
-          ></Button>
-          <Button
-            v-else
-            text
-            severity="secondary"
-            size="small"
-            icon="pi pi-pen-to-square"
-            class="!pt-1 !bg-[#EBE0BD]"
-            @click="showEditTitle = true"
-          ></Button>
-        </div>
+    <div
+      id="header"
+      class="flex flex-row justify-between items-end pb-2 border-b-[1px] border-[#bb9d3a]"
+    >
+      <div class="flex align-middle">
+        <InputText v-if="showEditTitle" v-model="title" type="text" />
+        <h1 v-else class="text-xl">{{ title }}</h1>
 
         <Button
-          v-if="game.finished == false && game.endValueReached == true"
-          raised
+          v-if="showEditTitle"
+          text
+          severity="secondary"
           size="small"
-          label="abschließen"
           icon="pi pi-check"
-          @click="finishGame"
+          class="!pt-1 !bg-[#EBE0BD]"
+          @click="editTitle"
+        ></Button>
+        <Button
+          v-else
+          text
+          severity="secondary"
+          size="small"
+          icon="pi pi-pen-to-square"
+          class="!pt-1 !bg-[#EBE0BD]"
+          @click="showEditTitle = true"
         ></Button>
       </div>
 
-      <div id="data" class="overflow-y-auto">
+      <Button
+        v-if="game.finished == false && game.endValueReached == true"
+        raised
+        size="small"
+        label="abschließen"
+        icon="pi pi-check"
+        @click="finishGame"
+      ></Button>
+    </div>
+    <div class="flex flex-col overflow-hidden rounded-lg">
+      <div id="data" class="h-full">
         <DataTable
           v-if="rounds && rounds.length > 0"
           v-model:editing-rows="editingRounds"
+          scrollable
+          scroll-height="flex"
           edit-mode="row"
           :value="rounds"
           :striped-rows="true"
           :show-gridlines="false"
-          class="rounded-lg overflow-hidden"
           data-key="num"
           @row-edit-save="onRowEditSave"
           @row-edit-cancel="onRowEditCancel"
