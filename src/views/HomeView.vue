@@ -12,7 +12,6 @@ import Dialog from "primevue/dialog";
 import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
 import Listbox from "primevue/listbox";
-import SelectButton from "primevue/selectbutton";
 import { onMounted, ref, type Ref } from "vue";
 
 let gameTypes: Ref<GameType[]> = ref([]);
@@ -36,19 +35,27 @@ async function createNewGameType() {
   if (
     newGameType.value.name == null ||
     newGameType.value.startValue == null ||
-    newGameType.value.endValue == null ||
-    newGameType.value.countType == null
+    newGameType.value.endValue == null
   ) {
     return;
   }
 
-  newGameType.value.id = gameTypes.value.length;
+  // games_counter auch für gametype ids verwenden
+  let game_counter = await FirestoreDB.getAllInCollection("games_counter");
+  let gameID: number = game_counter[0].data().games_counter;
 
-  if (newGameType.value.countType == "Runter") {
-    newGameType.value.countType = "minus";
-  } else if (newGameType.value.countType == "Rauf") {
+  newGameType.value.id = gameID;
+
+  await FirestoreDB.updateDocument("games_counter", "games_counter", {
+    games_counter: ++gameID,
+  });
+
+  if (newGameType.value.startValue < newGameType.value.endValue) {
     newGameType.value.countType = "plus";
+  } else if (newGameType.value.startValue > newGameType.value.endValue) {
+    newGameType.value.countType = "minus";
   } else {
+    alert("denk nochmal drüber nach! *facepalm*");
     return;
   }
 
@@ -69,16 +76,7 @@ async function createNewGameType() {
   getGameTypes();
 }
 
-function openEditGameTypePopup() {
-  showEditGameTypePopup.value = true;
-  selectedGameType.value.countType =
-    selectedGameType.value.countType == "plus" ? "Rauf" : "Runter";
-}
-
 async function editGameType() {
-  selectedGameType.value.countType =
-    selectedGameType.value.countType == "Rauf" ? "plus" : "minus";
-
   let index_to_splice = gameTypes.value.findIndex(
     (obj) => obj.id == selectedGameType.value.id
   );
@@ -225,6 +223,7 @@ async function deleteGameType() {
       showDeleteGameTypePopup.value = false;
       gameTypeToDelete.value = {} as GameType;
       getGameTypes();
+      getGames();
     });
   });
 }
@@ -286,7 +285,7 @@ onMounted(() => {
                 :scroll-height="'100%'"
                 :striped="true"
                 empty-message="keine Spielarten vorhanden"
-                @change="openEditGameTypePopup"
+                @change="showEditGameTypePopup = true"
               >
                 <template #option="slotProps">
                   <div
@@ -392,14 +391,6 @@ onMounted(() => {
             />
           </div>
         </div>
-
-        <div class="flex flex-row">
-          <SelectButton
-            v-model="newGameType.countType"
-            :options="['Rauf', 'Runter']"
-            class="mb-4 flex w-full"
-          />
-        </div>
         <div class="flex justify-between gap-2">
           <Button
             type="button"
@@ -427,8 +418,8 @@ onMounted(() => {
         <div class="flex flex-row mb-4">
           <div id="links" class="flex flex-col justify-between py-2 w-1/3">
             <label for="name" class="font-semibold">Name</label>
-            <label for="startValue" class="font-semibold">Startwert</label>
-            <label for="endValue" class="font-semibold">Endwert</label>
+            <!-- <label for="startValue" class="font-semibold">Startwert</label>
+            <label for="endValue" class="font-semibold">Endwert</label> -->
           </div>
           <div id="rechts" class="flex flex-col w-2/3 gap-4">
             <InputText
@@ -438,7 +429,7 @@ onMounted(() => {
               class="w-2/3"
               autocomplete="off"
             />
-            <InputNumber
+            <!-- <InputNumber
               id="startValue"
               v-model="selectedGameType.startValue"
               fluid
@@ -451,16 +442,8 @@ onMounted(() => {
               fluid
               input-class="w-2/3"
               autocomplete="off"
-            />
+            /> -->
           </div>
-        </div>
-
-        <div class="flex flex-row">
-          <SelectButton
-            v-model="selectedGameType.countType"
-            :options="['Rauf', 'Runter']"
-            class="mb-4 flex w-full"
-          />
         </div>
         <div class="flex justify-between gap-2">
           <Button
