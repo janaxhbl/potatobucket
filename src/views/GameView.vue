@@ -10,7 +10,7 @@ import DataTable from "primevue/datatable";
 import InputGroup from "primevue/inputgroup";
 import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
-import { onMounted, ref, type Ref } from "vue";
+import { onMounted, onUpdated, ref, type Ref } from "vue";
 import { useRoute } from "vue-router";
 
 let gameId: number = -1;
@@ -29,6 +29,8 @@ let showEditColumn: Ref<boolean> = ref(false);
 
 let addRoundValues: Ref<number[]> = ref([]);
 let winner: Ref<string> = ref("");
+let dataTableHeight: Ref<string> = ref("height: 400px;");
+let headerDataTableHeight: Ref<string> = ref("height: 400px;");
 
 function getCurrentGame() {
   let data = FirestoreDB.getAllInCollection("partien");
@@ -62,7 +64,7 @@ function getCurrentGame() {
         let pointsOfLastRound =
           rounds_raw.value[rounds_raw.value.length - 1].points;
         let max_min_points: number = pointsOfLastRound[0];
-        let player_id: number = 0;
+        let player_ids: number[] = [0];
         for (let i = 1; i < pointsOfLastRound.length; i++) {
           if (
             (gameType.value.countType == "plus" &&
@@ -71,13 +73,33 @@ function getCurrentGame() {
               pointsOfLastRound[i] < max_min_points)
           ) {
             max_min_points = pointsOfLastRound[i];
-            player_id = i;
+            player_ids = [];
+            player_ids[0] = i;
+          } else if (pointsOfLastRound[i] == max_min_points) {
+            player_ids.push(i);
           }
         }
-        winner.value =
-          players_raw.value[player_id] +
-          " hat " +
-          gameType.value.endValueReachedWinLose;
+        console.log(player_ids);
+        if (player_ids.length == 1) {
+          winner.value =
+            players_raw.value[player_ids[0]] +
+            " hat " +
+            gameType.value.endValueReachedWinLose;
+        } else {
+          for (let i = 0; i < player_ids.length; i++) {
+            if (i == 0) {
+              winner.value = players_raw.value[player_ids[i]];
+            } else if (i + 1 == player_ids.length) {
+              winner.value =
+                winner.value + " und " + players_raw.value[player_ids[i]];
+            } else {
+              winner.value =
+                winner.value + ", " + players_raw.value[player_ids[i]];
+            }
+          }
+          winner.value =
+            winner.value + " haben " + gameType.value.endValueReachedWinLose;
+        }
       }
 
       // add as many nulls as there are players in the addRoundValues array
@@ -203,6 +225,7 @@ async function createNewDefaultRound() {
   let newRound: Round = { num: 1, points: newPoints };
   game.value.rounds.push(newRound);
   game.value.endValueReached = false;
+  winner.value = "";
 
   await FirestoreDB.updateDocument("partien", docId, game.value);
   getCurrentGame();
@@ -281,53 +304,68 @@ function getHeaderClass(p: any) {
   return "";
 }
 
+function setDataTableStyle() {
+  let header = document.getElementById("header");
+  let footer = document.getElementById("footer");
+  if (header && footer) {
+    headerDataTableHeight.value =
+      "height: calc(100% - " + footer.offsetHeight + "px" + ")";
+    dataTableHeight.value =
+      "height: calc(100% - " + header.offsetHeight + "px" + ")";
+  }
+}
+
 onMounted(() => {
   gameId = Number(useRoute().params.id);
   getCurrentGame();
 });
+
+onUpdated(() => {
+  setDataTableStyle();
+});
 </script>
 
 <template>
-  <div id="main" class="h-full flex flex-col justify-between gap-4">
-    <div
-      id="header"
-      class="flex flex-row justify-between items-end pb-2 border-b-[1px] border-[#bb9d3a]"
-    >
-      <div class="flex align-middle">
-        <InputText v-if="showEditTitle" v-model="title" type="text" />
-        <h1 v-else class="text-xl">{{ title }}</h1>
+  <div id="main" class="h-full flex flex-col justify-between">
+    <div :style="headerDataTableHeight">
+      <div
+        id="header"
+        class="flex flex-row justify-between items-end mb-4 pb-2 border-b-[1px] border-[#bb9d3a]"
+      >
+        <div class="flex align-middle">
+          <InputText v-if="showEditTitle" v-model="title" type="text" />
+          <h1 v-else class="text-xl">{{ title }}</h1>
+
+          <Button
+            v-if="showEditTitle"
+            text
+            severity="secondary"
+            size="small"
+            icon="pi pi-check"
+            class="!pt-1 !bg-[#EBE0BD]"
+            @click="editTitle"
+          ></Button>
+          <Button
+            v-else
+            text
+            severity="secondary"
+            size="small"
+            icon="pi pi-pen-to-square"
+            class="!pt-1 !bg-[#EBE0BD]"
+            @click="showEditTitle = true"
+          ></Button>
+        </div>
 
         <Button
-          v-if="showEditTitle"
-          text
-          severity="secondary"
+          v-if="game.finished == false && game.endValueReached == true"
+          raised
           size="small"
+          label="abschließen"
           icon="pi pi-check"
-          class="!pt-1 !bg-[#EBE0BD]"
-          @click="editTitle"
-        ></Button>
-        <Button
-          v-else
-          text
-          severity="secondary"
-          size="small"
-          icon="pi pi-pen-to-square"
-          class="!pt-1 !bg-[#EBE0BD]"
-          @click="showEditTitle = true"
+          @click="finishGame"
         ></Button>
       </div>
-
-      <Button
-        v-if="game.finished == false && game.endValueReached == true"
-        raised
-        size="small"
-        label="abschließen"
-        icon="pi pi-check"
-        @click="finishGame"
-      ></Button>
-    </div>
-    <div class="flex flex-col overflow-hidden rounded-lg">
-      <div id="data" class="h-full">
+      <div id="data" :style="dataTableHeight" class="pb-6">
         <DataTable
           v-if="rounds && rounds.length > 0"
           v-model:editing-rows="editingRounds"
@@ -338,6 +376,11 @@ onMounted(() => {
           :striped-rows="true"
           :show-gridlines="false"
           data-key="num"
+          :pt="{
+            tableContainer: {
+              class: 'rounded-lg',
+            },
+          }"
           @row-edit-save="onRowEditSave"
           @row-edit-cancel="onRowEditCancel"
         >
@@ -365,7 +408,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div>
+    <div id="footer">
       <div
         v-if="
           !showEditColumn &&
@@ -374,7 +417,8 @@ onMounted(() => {
         "
       >
         <h1
-          class="text-5xl font-semibold text-center pb-4"
+          id="winner"
+          class="text-4xl font-semibold text-center pb-4"
           style="
             background: rgba(34, 197, 94, 1);
             background: linear-gradient(
