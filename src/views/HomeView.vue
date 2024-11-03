@@ -12,6 +12,7 @@ import Dialog from "primevue/dialog";
 import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
 import Listbox from "primevue/listbox";
+import SelectButton from "primevue/selectbutton";
 import { onMounted, ref, type Ref } from "vue";
 
 let gameTypes: Ref<GameType[]> = ref([]);
@@ -19,23 +20,30 @@ let gameTypes: Ref<GameType[]> = ref([]);
 let newGameTypeListOption = ref([{ name: "neue Spielart hinzufügen" }]);
 let showCreateGameTypePopup: Ref<boolean> = ref(false);
 let newGameType: Ref<GameType> = ref({} as GameType);
+let endValueReachedWinLoseOptions = ref(["gewonnen", "verloren"]);
+let endValueReachedBummerlOptions = ref(["Gewinner", "Verlierer"]);
+let newGameTypeEndValueReachedBummerlDummy: Ref<string> = ref("");
 
 let showEditGameTypePopup: Ref<boolean> = ref(false);
 let selectedGameType: Ref<GameType> = ref({} as GameType);
+let selectedGameTypeEndValueReachedBummerlDummy: Ref<string> = ref("");
+
 let showDeleteGameTypePopup: Ref<boolean> = ref(false);
 let gameTypeToDelete: Ref<GameType> = ref({} as GameType);
 
 let finishedGames: Ref<Game[]> = ref([]);
 let selectedFinishedGame: Ref<Game> = ref({} as Game);
 
-let gameToDelete: Ref<Game> = ref({} as Game);
 let showDeleteGamePopup: Ref<boolean> = ref(false);
+let gameToDelete: Ref<Game> = ref({} as Game);
 
 async function createNewGameType() {
   if (
     newGameType.value.name == null ||
     newGameType.value.startValue == null ||
-    newGameType.value.endValue == null
+    newGameType.value.endValue == null ||
+    newGameType.value.endValueReachedWinLose == null ||
+    newGameTypeEndValueReachedBummerlDummy.value == null
   ) {
     return;
   }
@@ -59,6 +67,25 @@ async function createNewGameType() {
     return;
   }
 
+  // bummerlsettings übersetzen
+  if (newGameType.value.endValueReachedWinLose == "gewonnen") {
+    if (newGameTypeEndValueReachedBummerlDummy.value == "Verlierer") {
+      newGameType.value.endValueReachedBummerl = false;
+      newGameType.value.bummerlGood = false;
+    } else if (newGameTypeEndValueReachedBummerlDummy.value == "Gewinner") {
+      newGameType.value.endValueReachedBummerl = true;
+      newGameType.value.bummerlGood = true;
+    }
+  } else if (newGameType.value.endValueReachedWinLose == "verloren") {
+    if (newGameTypeEndValueReachedBummerlDummy.value == "Verlierer") {
+      newGameType.value.endValueReachedBummerl = true;
+      newGameType.value.bummerlGood = false;
+    } else if (newGameTypeEndValueReachedBummerlDummy.value == "Gewinner") {
+      newGameType.value.endValueReachedBummerl = false;
+      newGameType.value.bummerlGood = true;
+    }
+  }
+
   gameTypes.value.push(newGameType.value);
 
   await FirestoreDB.updateDocument("game_types", "game_types", {
@@ -72,6 +99,8 @@ async function createNewGameType() {
     endValue: null,
     countType: "",
     endValueReachedWinLose: "gewonnen",
+    endValueReachedBummerl: false,
+    bummerlGood: false,
   };
   showCreateGameTypePopup.value = false;
   getGameTypes();
@@ -158,6 +187,25 @@ function openGameTypeDeletePopup(
     }
   }
   showDeleteGameTypePopup.value = true;
+}
+
+function openGameTypeEditPopup() {
+  // bummerlsettings übersetzen
+  if (selectedGameType.value.endValueReachedWinLose == "gewonnen") {
+    if (selectedGameType.value.endValueReachedBummerl == false) {
+      selectedGameTypeEndValueReachedBummerlDummy.value = "Verlierer";
+    } else if (selectedGameType.value.endValueReachedBummerl == true) {
+      selectedGameTypeEndValueReachedBummerlDummy.value = "Gewinner";
+    }
+  } else if (selectedGameType.value.endValueReachedWinLose == "verloren") {
+    if (selectedGameType.value.endValueReachedBummerl == false) {
+      selectedGameTypeEndValueReachedBummerlDummy.value == "Gewinner";
+    } else if (selectedGameType.value.endValueReachedBummerl == true) {
+      selectedGameTypeEndValueReachedBummerlDummy.value == "Verlierer";
+    }
+  }
+
+  showEditGameTypePopup.value = true;
 }
 
 async function deleteGame() {
@@ -286,7 +334,7 @@ onMounted(() => {
                 :scroll-height="'100%'"
                 :striped="true"
                 empty-message="keine Spielarten vorhanden"
-                @change="showEditGameTypePopup = true"
+                @change="openGameTypeEditPopup"
               >
                 <template #option="slotProps">
                   <div
@@ -392,7 +440,27 @@ onMounted(() => {
             />
           </div>
         </div>
-        <div class="flex justify-between gap-2">
+        <div id="bummerlSettings" class="flex flex-col gap-2 mb-4">
+          <label for="endValueReachedWinLose" class="font-semibold"
+            >Endwert erreicht:</label
+          >
+          <SelectButton
+            id="endValueReachedWinLose"
+            v-model="newGameType.endValueReachedWinLose"
+            :options="endValueReachedWinLoseOptions"
+            :allow-empty="false"
+          />
+          <label for="endValueReachedBummerl" class="font-semibold"
+            >Bummerl bekommt:</label
+          >
+          <SelectButton
+            id="endValueReachedBummerl"
+            v-model="newGameTypeEndValueReachedBummerlDummy"
+            :options="endValueReachedBummerlOptions"
+            :allow-empty="false"
+          />
+        </div>
+        <div id="createButtons" class="flex justify-between gap-2">
           <Button
             type="button"
             label="Abbrechen"
@@ -412,17 +480,17 @@ onMounted(() => {
     <Dialog
       v-model:visible="showEditGameTypePopup"
       modal
-      header="Spielart bearbeiten"
+      header="Spielart Details"
       :style="{ width: '80vw' }"
     >
       <div class="flex flex-col">
         <div class="flex flex-row mb-4">
-          <div id="links" class="flex flex-col justify-between py-2 w-1/3">
+          <div id="editLinks" class="flex flex-col justify-between py-2 w-1/3">
             <label for="name" class="font-semibold">Name</label>
-            <!-- <label for="startValue" class="font-semibold">Startwert</label>
-            <label for="endValue" class="font-semibold">Endwert</label> -->
+            <label for="startValue" class="font-semibold">Startwert</label>
+            <label for="endValue" class="font-semibold">Endwert</label>
           </div>
-          <div id="rechts" class="flex flex-col w-2/3 gap-4">
+          <div id="editRechts" class="flex flex-col w-2/3 gap-4">
             <InputText
               id="name"
               v-model="selectedGameType.name"
@@ -430,12 +498,13 @@ onMounted(() => {
               class="w-2/3"
               autocomplete="off"
             />
-            <!-- <InputNumber
+            <InputNumber
               id="startValue"
               v-model="selectedGameType.startValue"
               fluid
               input-class="w-2/3"
               autocomplete="off"
+              disabled
             />
             <InputNumber
               id="endValue"
@@ -443,10 +512,33 @@ onMounted(() => {
               fluid
               input-class="w-2/3"
               autocomplete="off"
-            /> -->
+              disabled
+            />
           </div>
         </div>
-        <div class="flex justify-between gap-2">
+        <div id="editBummerlSettings" class="flex flex-col gap-2 mb-4">
+          <label for="endValueReachedWinLose" class="font-semibold"
+            >Endwert erreicht:</label
+          >
+          <SelectButton
+            id="endValueReachedWinLose"
+            v-model="selectedGameType.endValueReachedWinLose"
+            :options="endValueReachedWinLoseOptions"
+            :allow-empty="false"
+            disabled
+          />
+          <label for="endValueReachedBummerl" class="font-semibold"
+            >Bummerl bekommt:</label
+          >
+          <SelectButton
+            id="endValueReachedBummerl"
+            v-model="selectedGameTypeEndValueReachedBummerlDummy"
+            :options="endValueReachedBummerlOptions"
+            :allow-empty="false"
+            disabled
+          />
+        </div>
+        <div id="editButtons" class="flex justify-between gap-2">
           <Button
             type="button"
             label="Abbrechen"
