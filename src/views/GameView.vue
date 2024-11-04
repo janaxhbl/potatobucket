@@ -418,7 +418,6 @@ onUpdated(() => {
         ></Button>
       </div>
       <div id="data" :style="dataTableHeight" class="pb-6">
-        {{ game }}
         <DataTable
           v-if="rounds && rounds.length > 0"
           v-model:editing-rows="editingRounds"
@@ -433,6 +432,9 @@ onUpdated(() => {
             tableContainer: {
               class: 'rounded-lg',
             },
+            thead: {
+              onClick: toggleBummerl,
+            },
           }"
           @row-edit-save="onRowEditSave"
           @row-edit-cancel="onRowEditCancel"
@@ -444,18 +446,14 @@ onUpdated(() => {
             :header-class="setHeaderPaddingClass()"
           >
             <template #header>
-              <a
-                class="flex flex-col"
-                @touchend="toggleBummerlTouch"
-                @click="toggleBummerl"
-              >
+              <div class="flex flex-col">
                 <span :class="setHeaderClass(i - 1)">
                   {{ players[i - 1].header }}
                 </span>
                 <span :class="setBummerlClass()">
                   {{ game.bummerl[i - 1] }}
                 </span>
-              </a>
+              </div>
             </template>
             <template #editor="{ data, field }">
               <InputNumber
