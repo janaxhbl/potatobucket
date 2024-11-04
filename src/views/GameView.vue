@@ -321,21 +321,39 @@ async function finishGame() {
   getCurrentGame();
 }
 
-function getHeaderClass(i: number) {
+function setHeaderClass(i: number) {
+  let _class: string = "font-semibold leading-3";
   if (
     players.value[i].header == players_raw.value[game.value.roundDealer] &&
     !game.value.endValueReached
   ) {
-    return "!text-green-500 font-semibold leading-3";
+    _class += " !text-green-500";
   }
-  return "font-semibold leading-3";
+  return _class;
 }
 
-function getBummerlClass() {
+function setHeaderPaddingClass() {
+  let _class: string = "";
+  if (game.value.showBummerl) {
+    _class = "!pt-3 !pb-1";
+  }
+  return _class;
+}
+
+function setBummerlClass() {
+  if (!game.value.showBummerl) {
+    return "hidden";
+  }
   if (gameType.value.bummerlGood) {
     return "text-xs self-center !text-green-500";
   }
   return "text-xs self-center !text-red-500";
+}
+
+async function toggleBummerl() {
+  game.value.showBummerl = !game.value.showBummerl;
+  await FirestoreDB.updateDocument("partien", docId, game.value);
+  setBummerlClass(); // funktioniert zwar auch ohne, aber idk ob das so soll, deswegen lieber drin lassen
 }
 
 function setDataTableStyle() {
@@ -422,14 +440,14 @@ onUpdated(() => {
             v-for="i in players.length"
             :key="i"
             :field="players[i - 1].field"
-            header-class="!pt-3 !pb-1"
+            :header-class="setHeaderPaddingClass()"
           >
             <template #header>
-              <div class="flex flex-col">
-                <span :class="getHeaderClass(i - 1)">
+              <div class="flex flex-col" @click="toggleBummerl">
+                <span :class="setHeaderClass(i - 1)">
                   {{ players[i - 1].header }}
                 </span>
-                <span :class="getBummerlClass()">
+                <span :class="setBummerlClass()">
                   {{ game.bummerl[i - 1] }}
                 </span>
               </div>

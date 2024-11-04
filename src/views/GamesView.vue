@@ -75,6 +75,7 @@ async function createGame() {
       roundDealer: 0,
       gameDealer: 0,
       bummerl: _bummerl,
+      showBummerl: true,
     };
 
     let doc_id: string = "";

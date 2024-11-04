@@ -13,4 +13,5 @@ export interface Game {
   roundDealer: number;
   gameDealer: number;
   bummerl: number[];
+  showBummerl: boolean;
 }
