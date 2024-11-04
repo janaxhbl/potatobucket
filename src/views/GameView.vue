@@ -79,7 +79,6 @@ function getCurrentGame() {
             player_ids.push(i);
           }
         }
-        console.log(player_ids);
         if (player_ids.length == 1) {
           winner.value =
             players_raw.value[player_ids[0]] +
@@ -115,6 +114,7 @@ function getCurrentGame() {
           header: players_raw.value[i],
         });
       }
+      console.log(players.value);
 
       rounds.value = [];
       for (let i = 0; i < rounds_raw.value.length; i++) {
@@ -198,11 +198,38 @@ async function addRound() {
           game.value.gameDealer = 0;
         }
         game.value.roundDealer = game.value.gameDealer;
+        if (gameType.value.endValueReachedBummerl == true) {
+          game.value.bummerl[i]++;
+        } else if (gameType.value.endValueReachedBummerl == false) {
+          // todo: nicht ALLE anderen sondern nur der mit höchste / niedrigste punkte
+          let max_min_points: number = newRound.points[0];
+          let player_ids: number[] = [0];
+          for (let j = 1; j < newRound.points.length; j++) {
+            if (
+              (gameType.value.countType == "plus" &&
+                newRound.points[j] < max_min_points) ||
+              (gameType.value.countType == "minus" &&
+                newRound.points[j] > max_min_points)
+            ) {
+              max_min_points = newRound.points[j];
+              player_ids = [];
+              player_ids[0] = j;
+            } else if (newRound.points[j] == max_min_points) {
+              player_ids.push(j);
+            }
+          }
+          for (let j = 0; j < game.value.bummerl.length; j++) {
+            if (player_ids.includes(j)) {
+              game.value.bummerl[j]++;
+            }
+          }
+        }
         break;
       }
     }
   }
 
+  console.log(game.value);
   await FirestoreDB.updateDocument("partien", docId, game.value);
 
   addRoundValues.value = [];
@@ -294,14 +321,21 @@ async function finishGame() {
   getCurrentGame();
 }
 
-function getHeaderClass(p: any) {
+function getHeaderClass(i: number) {
   if (
-    p.header == players_raw.value[game.value.roundDealer] &&
+    players.value[i].header == players_raw.value[game.value.roundDealer] &&
     !game.value.endValueReached
   ) {
-    return "!text-green-500";
+    return "!text-green-500 font-semibold leading-3";
   }
-  return "";
+  return "font-semibold leading-3";
+}
+
+function getBummerlClass() {
+  if (gameType.value.bummerlGood) {
+    return "text-xs self-center !text-green-500";
+  }
+  return "text-xs self-center !text-red-500";
 }
 
 function setDataTableStyle() {
@@ -385,12 +419,21 @@ onUpdated(() => {
           @row-edit-cancel="onRowEditCancel"
         >
           <Column
-            v-for="p of players"
-            :key="p.field"
-            :field="p.field"
-            :header="p.header"
-            :header-class="getHeaderClass(p)"
+            v-for="i in players.length"
+            :key="i"
+            :field="players[i - 1].field"
+            header-class="!pt-3 !pb-1"
           >
+            <template #header>
+              <div class="flex flex-col">
+                <span :class="getHeaderClass(i - 1)">
+                  {{ players[i - 1].header }}
+                </span>
+                <span :class="getBummerlClass()">
+                  {{ game.bummerl[i - 1] }}
+                </span>
+              </div>
+            </template>
             <template #editor="{ data, field }">
               <InputNumber
                 v-model="data[field]"
