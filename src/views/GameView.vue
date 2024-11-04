@@ -226,8 +226,6 @@ async function addRound() {
       }
     }
   }
-
-  console.log(game.value);
   await FirestoreDB.updateDocument("partien", docId, game.value);
 
   addRoundValues.value = [];
@@ -354,6 +352,10 @@ async function toggleBummerl() {
   setBummerlClass(); // funktioniert zwar auch ohne, aber idk ob das so soll, deswegen lieber drin lassen
 }
 
+function toggleBummerlTouch() {
+  alert("touch");
+}
+
 function setDataTableStyle() {
   let header = document.getElementById("header");
   let footer = document.getElementById("footer");
@@ -442,7 +444,11 @@ onUpdated(() => {
             :header-class="setHeaderPaddingClass()"
           >
             <template #header>
-              <a class="flex flex-col" @touchend="null" @click="toggleBummerl">
+              <a
+                class="flex flex-col"
+                @touchend="toggleBummerlTouch"
+                @click="toggleBummerl"
+              >
                 <span :class="setHeaderClass(i - 1)">
                   {{ players[i - 1].header }}
                 </span>
