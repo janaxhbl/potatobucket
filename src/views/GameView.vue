@@ -7,6 +7,7 @@ import type { Round } from "@/interfaces/Round";
 import Button from "primevue/button";
 import Column from "primevue/column";
 import DataTable from "primevue/datatable";
+import Dialog from "primevue/dialog";
 import InputGroup from "primevue/inputgroup";
 import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
@@ -31,6 +32,8 @@ let addRoundValues: Ref<number[]> = ref([]);
 let winner: Ref<string> = ref("");
 let dataTableHeight: Ref<string> = ref("height: 400px;");
 let headerDataTableHeight: Ref<string> = ref("height: 400px;");
+
+let showMenuPopup: Ref<boolean> = ref(false);
 
 function getCurrentGame() {
   let data = FirestoreDB.getAllInCollection("partien");
@@ -301,6 +304,7 @@ function showEditColumns() {
     let lastRound = rounds.value[rounds.value.length - 1];
     editingRounds.value.push(lastRound);
   }
+  showMenuPopup.value = false;
 }
 
 function editTitle() {
@@ -315,6 +319,17 @@ async function finishGame() {
   await FirestoreDB.updateDocument("partien", docId, game.value);
 
   getCurrentGame();
+}
+
+function setDataTableStyle() {
+  let header = document.getElementById("header");
+  let footer = document.getElementById("footer");
+  if (header && footer) {
+    headerDataTableHeight.value =
+      "height: calc(100% - " + footer.offsetHeight + "px" + ")";
+    dataTableHeight.value =
+      "height: calc(100% - " + header.offsetHeight + "px" + ")";
+  }
 }
 
 function setHeaderClass(i: number) {
@@ -347,25 +362,10 @@ function setBummerlClass() {
 }
 
 async function toggleBummerl() {
-  console.log("toggleBummerl");
   game.value.showBummerl = !game.value.showBummerl;
   await FirestoreDB.updateDocument("partien", docId, game.value);
   setBummerlClass(); // funktioniert zwar auch ohne, aber idk ob das so soll, deswegen lieber drin lassen
-}
-
-function toggleBummerlTouch() {
-  alert("touch");
-}
-
-function setDataTableStyle() {
-  let header = document.getElementById("header");
-  let footer = document.getElementById("footer");
-  if (header && footer) {
-    headerDataTableHeight.value =
-      "height: calc(100% - " + footer.offsetHeight + "px" + ")";
-    dataTableHeight.value =
-      "height: calc(100% - " + header.offsetHeight + "px" + ")";
-  }
+  showMenuPopup.value = false;
 }
 
 onMounted(() => {
@@ -432,9 +432,6 @@ onUpdated(() => {
           :pt="{
             tableContainer: {
               class: 'rounded-lg',
-            },
-            thead: {
-              onClick: toggleBummerl,
             },
           }"
           @row-edit-save="onRowEditSave"
@@ -542,12 +539,37 @@ onUpdated(() => {
           <Button
             severity="secondary"
             size="small"
-            icon="pi pi-pen-to-square"
-            @click="showEditColumns"
+            icon="pi pi-ellipsis-v"
+            @click="showMenuPopup = true"
           ></Button>
         </div>
       </div>
     </div>
+    <Dialog
+      v-model:visible="showMenuPopup"
+      modal
+      :closable="false"
+      dismissable-mask
+      :show-header="false"
+      :style="{ width: '80vw' }"
+    >
+      <div class="flex flex-col gap-2 mt-4">
+        <Button
+          severity="secondary"
+          label="Zeilen editieren"
+          size="small"
+          icon="pi pi-pen-to-square"
+          @click="showEditColumns"
+        ></Button>
+        <Button
+          severity="secondary"
+          label="Bummerl ein-/ausblenden"
+          size="small"
+          icon="pi pi-eye-slash"
+          @click="toggleBummerl"
+        ></Button>
+      </div>
+    </Dialog>
   </div>
 </template>
 
