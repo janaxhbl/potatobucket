@@ -441,18 +441,14 @@ onUpdated(() => {
             :header-class="setHeaderPaddingClass()"
           >
             <template #header>
-              <div
-                class="flex flex-col"
-                @touchend="null"
-                @click="toggleBummerl"
-              >
+              <a class="flex flex-col" @touchend="null" @click="toggleBummerl">
                 <span :class="setHeaderClass(i - 1)">
                   {{ players[i - 1].header }}
                 </span>
                 <span :class="setBummerlClass()">
                   {{ game.bummerl[i - 1] }}
                 </span>
-              </div>
+              </a>
             </template>
             <template #editor="{ data, field }">
               <InputNumber
