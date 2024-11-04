@@ -418,6 +418,7 @@ onUpdated(() => {
         ></Button>
       </div>
       <div id="data" :style="dataTableHeight" class="pb-6">
+        {{ game }}
         <DataTable
           v-if="rounds && rounds.length > 0"
           v-model:editing-rows="editingRounds"
