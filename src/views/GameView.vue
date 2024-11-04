@@ -347,6 +347,7 @@ function setBummerlClass() {
 }
 
 async function toggleBummerl() {
+  console.log("toggleBummerl");
   game.value.showBummerl = !game.value.showBummerl;
   await FirestoreDB.updateDocument("partien", docId, game.value);
   setBummerlClass(); // funktioniert zwar auch ohne, aber idk ob das so soll, deswegen lieber drin lassen
