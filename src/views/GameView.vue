@@ -443,7 +443,11 @@ onUpdated(() => {
             :header-class="setHeaderPaddingClass()"
           >
             <template #header>
-              <div class="flex flex-col" @click="toggleBummerl">
+              <div
+                class="flex flex-col"
+                @click="toggleBummerl"
+                @touchend="toggleBummerl"
+              >
                 <span :class="setHeaderClass(i - 1)">
                   {{ players[i - 1].header }}
                 </span>
