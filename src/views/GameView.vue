@@ -114,8 +114,6 @@ function getCurrentGame() {
           header: players_raw.value[i],
         });
       }
-      console.log(players.value);
-
       rounds.value = [];
       for (let i = 0; i < rounds_raw.value.length; i++) {
         let roundRaw = rounds_raw.value[i];
@@ -418,7 +416,6 @@ onUpdated(() => {
         ></Button>
       </div>
       <div id="data" :style="dataTableHeight" class="pb-6">
-        {{ game }}
         <DataTable
           v-if="rounds && rounds.length > 0"
           v-model:editing-rows="editingRounds"
@@ -444,10 +441,10 @@ onUpdated(() => {
             :header-class="setHeaderPaddingClass()"
           >
             <template #header>
-              <a
+              <div
                 class="flex flex-col"
+                @touchend="null"
                 @click="toggleBummerl"
-                @touchend="toggleBummerl"
               >
                 <span :class="setHeaderClass(i - 1)">
                   {{ players[i - 1].header }}
@@ -455,7 +452,7 @@ onUpdated(() => {
                 <span :class="setBummerlClass()">
                   {{ game.bummerl[i - 1] }}
                 </span>
-              </a>
+              </div>
             </template>
             <template #editor="{ data, field }">
               <InputNumber
