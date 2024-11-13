@@ -32,6 +32,7 @@ let addRoundValues: Ref<number[]> = ref([]);
 let winner: Ref<string> = ref("");
 let dataTableHeight: Ref<string> = ref("height: 400px;");
 let headerDataTableHeight: Ref<string> = ref("height: 400px;");
+let bummerl_idx: Ref<number[]> = ref([]);
 
 let showMenuPopup: Ref<boolean> = ref(false);
 
@@ -101,6 +102,18 @@ function getCurrentGame() {
           }
           winner.value =
             winner.value + " haben " + gameType.value.endValueReachedWinLose;
+        }
+      }
+
+      let max_bummerl: number = game.value.bummerl[0];
+      bummerl_idx.value = [0];
+      for (let j = 1; j < game.value.bummerl.length; j++) {
+        if (game.value.bummerl[j] > max_bummerl) {
+          max_bummerl = game.value.bummerl[j];
+          bummerl_idx.value = [];
+          bummerl_idx.value.push(j);
+        } else if (game.value.bummerl[j] == max_bummerl) {
+          bummerl_idx.value.push(j);
         }
       }
 
@@ -351,20 +364,26 @@ function setHeaderPaddingClass() {
   return _class;
 }
 
-function setBummerlClass() {
+function setBummerlClass(i: number) {
   if (!game.value.showBummerl) {
     return "hidden";
   }
-  if (gameType.value.bummerlGood) {
-    return "text-xs self-center !text-green-500";
+  let _class = "text-xs self-center ";
+  if (game.value.bummerl[i] > 0) {
+    if (bummerl_idx.value.includes(i)) {
+      if (gameType.value.bummerlGood) {
+        _class += "!text-green-500";
+      } else {
+        _class += "!text-red-500";
+      }
+    }
   }
-  return "text-xs self-center !text-red-500";
+  return _class;
 }
 
 async function toggleBummerl() {
   game.value.showBummerl = !game.value.showBummerl;
   await FirestoreDB.updateDocument("partien", docId, game.value);
-  setBummerlClass(); // funktioniert zwar auch ohne, aber idk ob das so soll, deswegen lieber drin lassen
   showMenuPopup.value = false;
 }
 
@@ -448,7 +467,7 @@ onUpdated(() => {
                 <span :class="setHeaderClass(i - 1)">
                   {{ players[i - 1].header }}
                 </span>
-                <span :class="setBummerlClass()">
+                <span :class="setBummerlClass(i - 1)">
                   {{ game.bummerl[i - 1] }}
                 </span>
               </div>
